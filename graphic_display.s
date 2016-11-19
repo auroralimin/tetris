@@ -1,16 +1,54 @@
 .eqv VGA 0xFF000000
 .eqv NUMX 320
 .eqv NUMY 240
-.eqv PAR0 70
-.eqv PAR1 8
-.eqv PAR2 50
-.eqv PAR3 140
-.eqv PRETO 0x00
-.eqv VERM 0x0F
-.eqv AZUL 0xF0
+
+# Parameters 1P 
+.eqv PAR_1P_X0 125
+.eqv PAR_1P_X1 70
+.eqv PAR_1P_Y0 50
+.eqv PAR_1P_Y1 140
+.eqv PAR_1P_CENTER 146
+
+# Parameters 2P 
+.eqv PAR_2P_X0 60
+.eqv PAR_2P_X1 70
+.eqv PAR_2P_Y0 50
+.eqv PAR_2P_Y1 140
+.eqv PAR_2P_CENTER 81
+.eqv PAR_2P_SHIFT 130
+
+# Parameters 3P 
+.eqv PAR_3P_X0 28
+.eqv PAR_3P_X1 70
+.eqv PAR_3P_Y0 50
+.eqv PAR_3P_Y1 140
+.eqv PAR_3P_CENTER 49
+.eqv PAR_3P_SHIFT 100
+
+# Parameters 4P 
+.eqv PAR_4P_X0 8
+.eqv PAR_4P_X1 70
+.eqv PAR_4P_Y0 50
+.eqv PAR_4P_Y1 140
+.eqv PAR_4P_CENTER 29
+.eqv PAR_4P_SHIFT 78
+
+
+# Lado do quadrado
 .eqv SIDE 7
-.eqv CENTER 29
-.eqv SHIFT 78
+
+# Cores
+.eqv BLACK 0x00
+.eqv RED 0x0F
+.eqv BLUE 0xF0
+.eqv DARK_BLUE 0x8A
+.eqv PINK 0x86
+.eqv WHITE 0xFF
+.eqv GREEN 0x30
+.eqv DARK_RED 0x03
+.eqv YELLOW 0x37
+.eqv ORANGE 0x27
+.eqv DARK_GREEN 0x18
 
 .data
 
@@ -18,14 +56,16 @@
 MAIN: 		li $s0, NUMX
 		li $s1, NUMY
 		li $s2, VGA
-		li $s3, PRETO
+		li $s3, BLACK
 		jal show_initial
-		
-		#jal drop_O
 		
 		jal drop_I
 		
+		jal drop_O
+		
 		#jal drop_L
+		
+		#jal drop_J
 		
 		#jal drop_T
 		
@@ -41,8 +81,8 @@ show_initial: 	#li $a0, 0x0F
 		#syscall
 		
 		move $t0, $zero
-		li $t2, PAR0
-		li $t3, PAR1
+		li $t2, PAR_1P_X1
+		li $t3, PAR_1P_X0
 	
 loop0:		sgt $t5, $t0, $s0
 		bne $t5, $zero, sai0
@@ -58,13 +98,13 @@ loop2:		beq $t1, $s1, sai2
 		j loop2
 sai2:		addi $t0, $t0, 1
 		j loop1
-sai1:		addi $t0, $t0, PAR0
-		addi $t3, $t3, PAR0
-		addi $t3, $t3, PAR1
+sai1:		addi $t0, $t0, PAR_1P_X1
+		addi $t3, $t3, PAR_1P_X1
+		addi $t3, $t3, PAR_1P_X0
 		j loop0
 sai0:		
 
-		li $t3, PAR2
+		li $t3, PAR_1P_Y0
 		move $t1, $zero
 		
 loop3:		sgt $t5, $t1, $s1
@@ -81,27 +121,20 @@ loop5:		beq $t0, $s0, sai5
 		j loop5
 sai5:		add $t1, $t1, 1
 		j loop4
-sai4:		addi $t1, $t1, PAR3
-		addi $t3, $t3, PAR3
-		addi $t3, $t3, PAR2
+sai4:		addi $t1, $t1, PAR_1P_Y1
+		addi $t3, $t3, PAR_1P_Y1
+		addi $t3, $t3, PAR_1P_Y0
 		j loop3
 sai3:		jr $ra
 
-drop_O:		li $a0, CENTER
-		li $a1, PAR2
-		li $a3, VERM
-		li $t9, 19
+drop_O:		li $a0, PAR_1P_CENTER
+		li $a1, PAR_1P_Y0
+		li $t9, 18
 		move $t8, $zero
 
 loop_dropO:	beq $t8, $t9, sai_dropO
 
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		
-		jal show_initial
-		
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		li $a3, GREEN
 
 		addi $sp, $sp, -12
 		sw $ra, 8($sp)
@@ -115,6 +148,38 @@ loop_dropO:	beq $t8, $t9, sai_dropO
 		lw $ra, 8($sp)
 		addi $sp, $sp, 12
 		
+		li $a3, WHITE
+		addi $a1, $a1, -7 
+		
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $a0, 4($sp)
+		sw $a1, 0($sp)
+		
+		jal plot_I
+		
+		lw $a1, 0($sp)
+		lw $a0, 4($sp)
+		lw $ra, 8($sp)
+		addi $sp, $sp, 12
+		
+		bne $t8, $zero, pass0
+		
+		li $a3, BLACK 
+		
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $a0, 4($sp)
+		sw $a1, 0($sp)
+		
+		jal plot_I
+		
+		lw $a1, 0($sp)
+		lw $a0, 4($sp)
+		lw $ra, 8($sp)
+		addi $sp, $sp, 12
+				
+pass0:		addi $a1, $a1, SIDE
 		addi $a1, $a1, SIDE
 		addi $t8, $t8, 1
 		j loop_dropO
@@ -154,21 +219,14 @@ saiO1:		addi $t0, $t0, 1
 		j loopO0
 saiO0:		jr $ra
 
-drop_I:		li $a0, CENTER
-		li $a1, PAR2
-		li $a3, AZUL
+drop_I:		li $a0, PAR_1P_CENTER
+		li $a1, PAR_1P_Y0
 		li $t9, 20
 		move $t8, $zero
 
 loop_dropI:	beq $t8, $t9, sai_dropI
 
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		
-		jal show_initial
-		
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		li $a3, PINK
 
 		addi $sp, $sp, -12
 		sw $ra, 8($sp)
@@ -182,6 +240,38 @@ loop_dropI:	beq $t8, $t9, sai_dropI
 		lw $ra, 8($sp)
 		addi $sp, $sp, 12
 		
+		li $a3, WHITE
+		addi $a1, $a1, -7 
+		
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $a0, 4($sp)
+		sw $a1, 0($sp)
+		
+		jal plot_I
+		
+		lw $a1, 0($sp)
+		lw $a0, 4($sp)
+		lw $ra, 8($sp)
+		addi $sp, $sp, 12
+		
+		bne $t8, $zero, pass1
+		
+		li $a3, BLACK
+		
+		addi $sp, $sp, -12
+		sw $ra, 8($sp)
+		sw $a0, 4($sp)
+		sw $a1, 0($sp)
+		
+		jal plot_I
+		
+		lw $a1, 0($sp)
+		lw $a0, 4($sp)
+		lw $ra, 8($sp)
+		addi $sp, $sp, 12
+		
+pass1:		addi $a1, $a1, SIDE
 		addi $a1, $a1, SIDE
 		addi $t8, $t8, 1
 		j loop_dropI
