@@ -41,14 +41,14 @@
 .eqv BLACK 0x00
 .eqv DARK_RED 0x03
 .eqv RED 0x0F
-.eqv DARK_GREEN 0x18
-.eqv ORANGE 0x27
+.eqv ORANGE 0x2F
 .eqv GREEN 0x30
 .eqv YELLOW 0x37
 .eqv DARK_BLUE 0x88
 .eqv PINK 0x86
 .eqv BLUE 0xF0
 .eqv WHITE 0xFF
+.eqv PURPLE 0xCC
 
 .data
 L0: .half 0x2e00, 0x88c0, 0xe800, 0xc440
@@ -111,24 +111,26 @@ MAIN: 		li $s0, NUMX
 ######### A rotina abaixo plota um quadrado 7x7 pixels. Recebe como argumento  
 ######### a localização (x,y) e a cor.
 #################################################################################################		
-plot_square:	move $t0, $zero
+plot_square:	li $t5, PAR_4P_Y0
 		li $t2, SIDE
+		addi $t2, $t2, -1
+		
+saix6:		li $t0, 1
 loopx:		beq $t0, $t2, saix
-		move $t1, $zero
+		li $t1, 1
 		add $t3, $t0, $a0
 loopy:		beq $t1, $t2, saiy
 		add $t4, $t1, $a1
 		
-		li $t5, PAR_4P_Y0
 		sgt $t5, $t4, $t5
-		beq $t5, $zero, pass_px
+		beq $t5, $zero, pass_sq
 		
 		mult $t4, $s0 		# y*320
 		mflo $t4
 		add $t4, $t4, $t3	# y*320 + x
 		add $t4, $t4, $s2	# endereço inicial + offset calculado
 		sb $a3, 0($t4)		# plota um pixel na tela
-pass_px:	addi $t1, $t1, 1	# incrementa o contador
+pass_sq:	addi $t1, $t1, 1	# incrementa o contador
 		j loopy
 saiy:		add $t0, $t0, 1
 		j loopx
@@ -159,9 +161,9 @@ plot:		li $t2, 4
 		beq $a2, 2, color_blue
 		beq $a2, 4, color_green
 		beq $a2, 6, color_pink
-		beq $a2, 8, color_yellow
+		beq $a2, 8, color_orange
 		beq $a2, 10, color_db
-		beq $a2, 12, color_dg
+		beq $a2, 12, color_purple
 
 color_red:	li $a3, RED
 		j loop_plot0
@@ -178,10 +180,10 @@ color_pink:	li $a3, PINK
 color_db:	li $a3, DARK_BLUE
 		j loop_plot0
 	
-color_dg:	li $a3, DARK_GREEN
+color_purple:	li $a3, PURPLE
 		j loop_plot0
 		
-color_yellow:	li $a3, YELLOW
+color_orange:	li $a3, ORANGE
 		j loop_plot0
 		
 color_white:	li $a3, WHITE
