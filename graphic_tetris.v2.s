@@ -2,40 +2,13 @@
 .eqv NUMX 320
 .eqv NUMY 240
 
-# Parameters 1P 
-.eqv PAR_1P_X0 125
-.eqv PAR_1P_X1 70
-.eqv PAR_1P_Y0 50
-.eqv PAR_1P_Y1 140
-.eqv PAR_1P_CENTER 146
-
-# Parameters 2P 
-.eqv PAR_2P_X0 60
-.eqv PAR_2P_X1 70
-.eqv PAR_2P_Y0 50
-.eqv PAR_2P_Y1 140
-.eqv PAR_2P_CENTER 81
-.eqv PAR_2P_SHIFT 130
-
-# Parameters 3P 
-.eqv PAR_3P_X0 28
-.eqv PAR_3P_X1 70
-.eqv PAR_3P_Y0 50
-.eqv PAR_3P_Y1 140
-.eqv PAR_3P_CENTER 49
-.eqv PAR_3P_SHIFT 100
-
-# Parameters 4P 
-.eqv PAR_4P_X0 8
-.eqv PAR_4P_X1 70
-.eqv PAR_4P_Y0 50
-.eqv PAR_4P_Y1 140
-.eqv PAR_4P_CENTER 29
-.eqv PAR_4P_SHIFT 78
-
-
 # Lado do quadrado
 .eqv SIDE 7
+
+# Parametros fixos
+.eqv PAR_X1 70
+.eqv PAR_Y0 50
+.eqv PAR_Y1 140
 
 # Cores
 .eqv BLACK 0x00
@@ -58,33 +31,108 @@ T0: .half 0x4e00, 0x8c80, 0xe400, 0x4c40
 S0: .half 0x8c40, 0x6c00, 0x8c40, 0x6c00
 Z0: .half 0x4c80, 0xc600, 0x4c80, 0xc600
 Q0: .half 0xcc00, 0xcc00, 0xcc00, 0xcc00
+MSG0:.asciiz "Insira o numero de jogadores (1-4): "
+PTS: .asciiz "Score"
+PAR_4P: .half 8,29,78
+PAR_3P:	.half 28,49,100
+PAR_2P:	.half 60,81,130
+PAR_1P:	.half 125,146,0
 	  
 .text
 MAIN: 		li $s0, NUMX
 		li $s1, NUMY
 		li $s2, VGA
+		li $s3, 0
+
+		la $a0, MSG0
+		li $a1, 3
+		li $a2, 3
+		li $a3, WHITE
+		li $v0, 104
+		syscall
+		
+		li $v0, 5
+		syscall
+		
+		beq $v0, 4, P4
+		beq $v0, 3, P3
+		beq $v0, 2, P2
+		beq $v0, 1, P1
+		
+P4:		la $t0, PAR_4P 
+		j pass_main
+		
+P3:		la $t0, PAR_3P
+		j pass_main
+		
+P2:		la $t0, PAR_2P
+		j pass_main
+		
+P1:		la $t0, PAR_1P
+		
+pass_main:	lh $a0, 0($t0)
+		lh $a1, 2($t0)
+		lh $a2, 4($t0)
 		jal show_initial
+		move $a3, $s3
+		jal write_score
 		
 		li $a0, 15
-		li $a1, PAR_4P_Y0
+		li $a1, PAR_Y0
 		li $a2, 0
 		li $a3, 0
 		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
 		
 		li $a0, 43
-		li $a1, PAR_4P_Y0
+		li $a1, PAR_Y0
 		li $a2, 2
 		li $a3, 0
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
 		jal plot
 		
 		li $a1, 80
 		li $a2, 1
 		li $a3, 0
 		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
 		
 		li $a1, 110
 		li $a2, 3
 		li $a3, 0
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
 		jal plot
 		
 		li $a0, 15
@@ -92,16 +140,43 @@ MAIN: 		li $s0, NUMX
 		li $a2, 4
 		li $a3, 0
 		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
 		
 		li $a0, 43
 		li $a1, 140
 		li $a2, 5
 		li $a3, 0
 		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
 		
 		li $a1, 170
 		li $a2, 6
 		li $a3, 0
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
+		jal plot
+		addi $a0, $a0, 78
+		addi $a3, $a3, 1
 		jal plot
 		
 		li $v0, 10
@@ -111,7 +186,7 @@ MAIN: 		li $s0, NUMX
 ######### A rotina abaixo plota um quadrado 7x7 pixels. Recebe como argumento  
 ######### a localização (x,y) e a cor.
 #################################################################################################		
-plot_square:	li $t5, PAR_4P_Y0
+plot_square:	li $t5, PAR_Y0
 		li $t2, SIDE
 		addi $t2, $t2, -1
 		
@@ -140,7 +215,13 @@ saix:		jr $ra
 ######### A rotina abaixo plota uma peça. Recebe como argumento a localização (x,y), 
 ######### o tipo da peça, a rotação, e o tipo de cor (branca ou colorida).
 #################################################################################################												
-plot:		li $t2, 4
+plot:		addi $sp, $sp, -16
+		sw $a3, 12($sp)
+		sw $a2, 8($sp)
+		sw $a1, 4($sp)
+		sw $a0, 0($sp)
+
+		li $t2, 4
 		sll $a2, $a2, 1
 		mult $a2, $t2
 		mflo $t6
@@ -223,19 +304,32 @@ sai_plot1:	addi $t0, $t0, 1
 		addi $a0, $a0, -28
 		j loop_plot0
 		
-sai_plot0:	jr $ra
+sai_plot0:	lw $a0, 0($sp)
+		lw $a1, 4($sp)
+		lw $a2, 8($sp)
+		lw $a3, 12($sp)
+		addi $sp, $sp, 16
+		jr $ra
 
 #################################################################################################
 ######### A rotina abaixo plota o ambiente do jogo.
 #################################################################################################		
-show_initial: 	#li $a0, WHITE
-		#li $v0, 48
-		#syscall
+show_initial: 	addi $sp, $sp, -16
+		sw $a3, 12($sp)
+		sw $a2, 8($sp)
+		sw $a1, 4($sp)
+		sw $a0, 0($sp)
+		
+		li $a0, WHITE
+		li $v0, 48
+		syscall
+		
+		lw $a0, 0($sp)
 		
 		move $t0, $zero
-		li $t2, PAR_4P_X1
-		li $t3, PAR_4P_X0
-		li $t9, BLACK
+		li $t2, PAR_X1
+		move $t3, $a0
+		li $a3, BLACK
 	
 loop0:		sgt $t5, $t0, $s0
 		bne $t5, $zero, sai0
@@ -243,24 +337,25 @@ loop0:		sgt $t5, $t0, $s0
 loop1:		beq $t0, $t3, sai1
 		move $t1, $zero
 		
-loop2:		beq $t1, $s1, sai2
+loop2:		slt $t4, $t1, $s1
+		beq $t4, $zero, sai2
 		mult $t1, $s0 		# y*320
 		mflo $t4
 		add $t4, $t4, $t0	# y*320 + x
 		add $t4, $t4, $s2	# endereço inicial + offset calculado
-		sb $t9, 0($t4)		# plota um pixel na tela
+		sw $a3, 0($t4)		# plota um pixel na tela
 		addi $t1, $t1, 1	# incrementa o contador
 		j loop2
 		
 sai2:		addi $t0, $t0, 1
 		j loop1
 		
-sai1:		addi $t0, $t0, PAR_4P_X1
-		addi $t3, $t3, PAR_4P_X1
-		addi $t3, $t3, PAR_4P_X0
+sai1:		addi $t0, $t0, PAR_X1
+		addi $t3, $t3, PAR_X1
+		add $t3, $t3, $a0
 		j loop0
 
-sai0:		li $t3, PAR_4P_Y0
+sai0:		li $t3, PAR_Y0
 		move $t1, $zero
 		
 loop3:		sgt $t5, $t1, $s1
@@ -274,16 +369,58 @@ loop5:		beq $t0, $s0, sai5
 		mflo $t4
 		add $t4, $t4, $t0	# y*320 + x
 		add $t4, $t4, $s2	# endereço inicial + offset calculado
-		sb $t9, 0($t4)		# plota um pixel na tela
+		sb $a3, 0($t4)		# plota um pixel na tela
 		addi $t0, $t0, 1	# incrementa o contador
 		j loop5
 sai5:		add $t1, $t1, 1
 		j loop4
 		
-sai4:		addi $t1, $t1, PAR_4P_Y1
-		addi $t3, $t3, PAR_4P_Y1
-		addi $t3, $t3, PAR_4P_Y0
+sai4:		addi $t1, $t1, PAR_Y1
+		addi $t3, $t3, PAR_Y1
+		addi $t3, $t3, PAR_Y0
 		j loop3
 		
-sai3:		jr $ra
-	  
+sai3:		move $a1, $a0
+		la $a0, PTS
+		li $a2, PAR_Y0
+		addi $a2, $a2, PAR_Y1
+		addi $a2, $a2, SIDE
+		li $a3, WHITE
+		li $v0, 104
+		addi $a1, $a1, SIDE
+		addi $a1, $a1, SIDE	
+		syscall
+		
+		lw $a0, 0($sp)
+		lw $a1, 4($sp)
+		lw $a2, 8($sp)
+		lw $a3, 12($sp)
+		addi $sp, $sp, 16
+		
+		jr $ra
+		
+write_score:	addi $sp, $sp, -16
+		sw $a3, 12($sp)
+		sw $a2, 8($sp)
+		sw $a1, 4($sp)
+		sw $a0, 0($sp)
+
+		move $a1, $a0
+		addi $a1, $a1, 28
+		li $a2, PAR_Y0
+		addi $a2, $a2, PAR_Y1
+		addi $a2, $a2, SIDE
+		addi $a2, $a2, SIDE
+		addi $a2, $a2, SIDE
+		move $a0, $a3
+		li $a3, WHITE
+		li $v0, 101
+		syscall
+		
+		lw $a0, 0($sp)
+		lw $a1, 4($sp)
+		lw $a2, 8($sp)
+		lw $a3, 12($sp)
+		addi $sp, $sp, 16
+		
+		jr $ra
