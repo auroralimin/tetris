@@ -412,34 +412,34 @@ sai_score:	lw $a0, 0($sp)
 ######### $a1 o código do jogador.
 #################################################################################################
 		
-write_score:	addi $sp, $sp, -16	# salva os argumentos na pilha 
+write_score:	addi $sp, $sp, -16		# salva os argumentos na pilha 
 		sw $a3, 12($sp)
 		sw $a2, 8($sp)
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 
-		li $a2, PAR_Y0		# inicio da tela de jogo em y
-		addi $a2, $a2, PAR_Y1	# fim da tela de jogo em y
-		addi $a2, $a2, SIDE
+		li $a2, PAR_Y0			# inicio da área de jogo em y
+		addi $a2, $a2, PAR_Y1		# y_inicial = inicio_área_jogo_y + altura_área_jogo + 3*lado_quadrado
+		addi $a2, $a2, SIDE	
 		addi $a2, $a2, SIDE
 		addi $a2, $a2, SIDE
 		
-		li $t1, NUMX
-		andi $t2, $s0, 0x00FF0000
+		andi $t2, $s0, 0x00FF0000	# inicio_x = inicio da área de jogo em x
 		srl $t2, $t2, 16
-		sub $t0, $t1, $t2
-		addi $t1, $t1, SIDE
-		addi $t1, $t1, SIDE
-		addi $t1, $t1, SIDE
+		li $t1, NUMX			# fim_x = 320
+		sub $t0, $t1, $t2		# limite_x = 320 - inicio_area_jogo_x
 
-		andi $t2, $s0, 0x000000FF
-		mult $a1, $t2
-		mflo $t2
-		add $t1, $t1, $t2
-		move $a1, $t1
+		andi $t3, $s0, 0x000000FF	# shift_x
+		mult $a1, $t3
+		mflo $t3			# shift_x * nro_jogadores
+		add $t2, $t2, $t3		# pos_x = inicio_x + shift_x * nro_jogadores + 3 * lado_quadrado
+		addi $t2, $t2, SIDE
+		addi $t2, $t2, SIDE
+		addi $t2, $t2, SIDE
+		move $a1, $t2
 		li $a3, 0xFF00
 		li $v0, 101
-		syscall
+		syscall				# plota a pontuação na tela do jogador
 		
 passa_wscore:	lw $a0, 0($sp)
 		lw $a1, 4($sp)
