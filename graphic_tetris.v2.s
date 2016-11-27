@@ -34,20 +34,17 @@ Q0: .half 0xcc00, 0xcc00, 0xcc00, 0xcc00
 MSG0:.asciiz "Insira o numero de jogadores (1-4): "
 PTS: .asciiz "Score"
 PAR_4P: .half 8,29,78
-PAR_3P:	.half 28,49,100
+PAR_3P:	.half 28,49,98
 PAR_2P:	.half 60,81,130
-PAR_1P:	.half 125,146,0
+PAR_1P:	.half 125,146,195
 	  
 .text
 MAIN: 		li $s0, NUMX
-		li $s1, NUMY
-		li $s2, VGA
-		li $s3, 0
 
 		la $a0, MSG0
 		li $a1, 3
 		li $a2, 3
-		li $a3, WHITE
+		li $a3, 0xFF00
 		li $v0, 104
 		syscall
 		
@@ -70,11 +67,17 @@ P2:		la $t0, PAR_2P
 		
 P1:		la $t0, PAR_1P
 		
-pass_main:	lh $a0, 0($t0)
-		lh $a1, 2($t0)
-		lh $a2, 4($t0)
+pass_main:	lh $s1, 0($t0)
+		lh $s2, 2($t0)
+		lh $s3, 4($t0)
+		move $a0, $s1
+		move $a1, $s2
+		move $a2, $s3
 		jal show_initial
-		move $a3, $s3
+		move $a0, $s4
+		move $a1, $s5
+		move $a2, $s6
+		move $a3, $s7 
 		jal write_score
 		
 		li $a0, 15
@@ -107,6 +110,7 @@ pass_main:	lh $a0, 0($t0)
 		addi $a3, $a3, 1
 		jal plot
 		
+		li $a0, 43
 		li $a1, 80
 		li $a2, 1
 		li $a3, 0
@@ -121,6 +125,7 @@ pass_main:	lh $a0, 0($t0)
 		addi $a3, $a3, 1
 		jal plot
 		
+		li $a0, 15
 		li $a1, 110
 		li $a2, 3
 		li $a3, 0
@@ -165,8 +170,9 @@ pass_main:	lh $a0, 0($t0)
 		addi $a3, $a3, 1
 		jal plot
 		
+		li $a0, 43
 		li $a1, 170
-		li $a2, 6
+		li $a2, 0xE
 		li $a3, 0
 		jal plot
 		addi $a0, $a0, 78
@@ -199,11 +205,11 @@ loopy:		beq $t1, $t2, saiy
 		
 		sgt $t5, $t4, $t5
 		beq $t5, $zero, pass_sq
-		
-		mult $t4, $s0 		# y*320
+
+		mult $t4, $s0		# y*320
 		mflo $t4
 		add $t4, $t4, $t3	# y*320 + x
-		add $t4, $t4, $s2	# endereço inicial + offset calculado
+		addi $t4, $t4, VGA	# endereço inicial + offset calculado
 		sb $a3, 0($t4)		# plota um pixel na tela
 pass_sq:	addi $t1, $t1, 1	# incrementa o contador
 		j loopy
@@ -221,7 +227,9 @@ plot:		addi $sp, $sp, -16
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 
-		li $t2, 4
+		srl $t3, $a2, 3		# extrai o bit de codificacao da cor 
+		andi $a2, $a2, 0x7	# mascara dos bits de codificacao da peca
+		li $t2, 4		# calcula o endereco da matriz a ser utilizada
 		sll $a2, $a2, 1
 		mult $a2, $t2
 		mflo $t6
@@ -236,7 +244,6 @@ plot:		addi $sp, $sp, -16
 		move $t7, $zero	
 		move $t0, $zero
 		
-		srl $t3, $a2, 4
 		bne $t3, $zero, color_white
 		beq $a2, $zero, color_red
 		beq $a2, 2, color_blue
@@ -314,90 +321,75 @@ sai_plot0:	lw $a0, 0($sp)
 #################################################################################################
 ######### A rotina abaixo plota o ambiente do jogo.
 #################################################################################################		
-show_initial: 	addi $sp, $sp, -16
+show_initial: 	addi $sp, $sp, -20
+		sw $ra, 16($sp)
 		sw $a3, 12($sp)
 		sw $a2, 8($sp)
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 		
-		li $a0, WHITE
-		li $v0, 48
-		syscall
+		#li $a0, WHITE
+		#li $v0, 48
+		#syscall
 		
-		lw $a0, 0($sp)
+		#lw $a0, 0($sp)
 		
-		move $t0, $zero
-		li $t2, PAR_X1
-		move $t3, $a0
+		move $t3, $zero
 		li $a3, BLACK
-	
-loop0:		sgt $t5, $t0, $s0
+		move $t0, $a0
+		move $t2, $a0
+loop0:		sub $t5, $s0, $t2
+		sgt $t5, $t0, $t5
 		bne $t5, $zero, sai0
-		
-loop1:		beq $t0, $t3, sai1
-		move $t1, $zero
-		
-loop2:		slt $t4, $t1, $s1
-		beq $t4, $zero, sai2
+		add $t3, $t3, $t2
+		addi $t3, $t3, PAR_X1 
+loop1:		bge $t0, $t3, sai1
+		li $t1, PAR_Y0
+		addi $t5, $t1, PAR_Y1
+loop2:		bge $t1, $t5, sai2
 		mult $t1, $s0 		# y*320
 		mflo $t4
 		add $t4, $t4, $t0	# y*320 + x
-		add $t4, $t4, $s2	# endereço inicial + offset calculado
-		sw $a3, 0($t4)		# plota um pixel na tela
+		addi $t4, $t4, VGA	# endereço inicial + offset calculado
+		sb $a3, 0($t4)		# plota um pixel na tela
 		addi $t1, $t1, 1	# incrementa o contador
 		j loop2
 		
 sai2:		addi $t0, $t0, 1
 		j loop1
 		
-sai1:		addi $t0, $t0, PAR_X1
-		addi $t3, $t3, PAR_X1
-		add $t3, $t3, $a0
+sai1:		add $t0, $t0, $t2
 		j loop0
 
-sai0:		li $t3, PAR_Y0
-		move $t1, $zero
-		
-loop3:		sgt $t5, $t1, $s1
-		bne $t5, $zero, sai3
-		
-loop4:		beq $t1, $t3, sai4		
-		move $t0, $zero
-		
-loop5:		beq $t0, $s0, sai5
-		mult $t1, $s0 		# y*320
-		mflo $t4
-		add $t4, $t4, $t0	# y*320 + x
-		add $t4, $t4, $s2	# endereço inicial + offset calculado
-		sb $a3, 0($t4)		# plota um pixel na tela
-		addi $t0, $t0, 1	# incrementa o contador
-		j loop5
-sai5:		add $t1, $t1, 1
-		j loop4
-		
-sai4:		addi $t1, $t1, PAR_Y1
-		addi $t3, $t3, PAR_Y1
-		addi $t3, $t3, PAR_Y0
-		j loop3
-		
-sai3:		move $a1, $a0
-		la $a0, PTS
-		li $a2, PAR_Y0
+sai0:		li $a2, PAR_Y0
 		addi $a2, $a2, PAR_Y1
 		addi $a2, $a2, SIDE
-		li $a3, WHITE
-		li $v0, 104
-		addi $a1, $a1, SIDE
-		addi $a1, $a1, SIDE	
-		syscall
 		
-		lw $a0, 0($sp)
+		sub $t0, $s0, $s1
+		move $t1, $s1
+		addi $t1, $t1, SIDE
+		addi $t1, $t1, SIDE
+loop_score:	bge $t1, $t0, sai_score
+		la $a0, PTS
+		move $a1, $t1
+		li $a3, 0xFF00
+		li $v0, 104
+		syscall
+		add $t1, $t1, $s3
+		j loop_score
+		
+sai_score:	lw $a0, 0($sp)
 		lw $a1, 4($sp)
 		lw $a2, 8($sp)
 		lw $a3, 12($sp)
-		addi $sp, $sp, 16
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
 		
 		jr $ra
+		
+#################################################################################################
+######### Atualiza a pontuação de um jogador
+#################################################################################################
 		
 write_score:	addi $sp, $sp, -16
 		sw $a3, 12($sp)
@@ -405,19 +397,50 @@ write_score:	addi $sp, $sp, -16
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 
-		move $a1, $a0
-		addi $a1, $a1, 28
 		li $a2, PAR_Y0
 		addi $a2, $a2, PAR_Y1
 		addi $a2, $a2, SIDE
 		addi $a2, $a2, SIDE
 		addi $a2, $a2, SIDE
-		move $a0, $a3
-		li $a3, WHITE
+		add $t0, $s1, $s2
+		
+		move $t1, $s1
+		sub $t0, $s0, $s1
+		addi $t1, $t1, SIDE
+		addi $t1, $t1, SIDE
+		addi $t1, $t1, SIDE
+
+		move $a0, $s4
+		move $a1, $t1
+		li $a3, 0xFF00
 		li $v0, 101
 		syscall
 		
-		lw $a0, 0($sp)
+		add $t1, $t1, $s3
+		bge $t1, $t0, passa_wscore
+		move $a0, $s5
+		move $a1, $t1
+		li $a3, 0xFF00
+		li $v0, 101
+		syscall
+		
+		add $t1, $t1, $s3
+		bge $t1, $t0, passa_wscore
+		move $a0, $s6
+		move $a1, $t1
+		li $a3, 0xFF00
+		li $v0, 101
+		syscall
+		
+		add $t1, $t1, $s3
+		bge $t1, $t0, passa_wscore
+		move $a0, $s7
+		move $a1, $t1
+		li $a3, 0xFF00
+		li $v0, 101
+		syscall
+		
+passa_wscore:	lw $a0, 0($sp)
 		lw $a1, 4($sp)
 		lw $a2, 8($sp)
 		lw $a3, 12($sp)
