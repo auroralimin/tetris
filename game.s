@@ -28,7 +28,7 @@
 
 # Offset players
 .eqv OFFSET_X1 125
-.eqv OFFSET_Y1 36
+.eqv OFFSET_Y1 29
 
 .data
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
@@ -106,14 +106,44 @@ game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
 		li $s2, INIT_PIECE		#inicializa uma nova peca
+		addiu $s2, $s2, 1
 		addu $s2, $s2, $v0		#seta o tipo da peca
 		li $s0, 501			#acumula tempo suficiente pra ciclo
 
-continue_gl0:	#TODO: carregar registrador do input
-		#checar se existe novo input
-		#se existir, chama rotina input
+continue_gl0:	jal keyboard      		# verifica teclado por uma tecla
+		beq $v0, 119, rotate		# verifica se a tecla de rotacao (w) foi pressionada
+		beq $v0, 879, rotate		# verifica se a tecla de rotacao (W) foi pressionada
+		j continue_gl1			# se a rotacao nao foi pressionada, continua sem rotacionar
+		
+rotate:		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal set_arguments 		#seta os argumentos com os valores relativos a peca
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		
+		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
+		sll $a3, $a3, 1			#da shift de 1 para esquerda pois o primeiro bit simboliza o tipo do plot
 
-continue_gl1:	ble $s0, 500, continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal plot_piece			#plota negativo da peca com valores antigos
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+
+		addiu $s2, $s2, 16384		#incrementa rotacao
+		sll $s2, $s2, 16
+		srl $s2, $s2, 16
+				
+		addiu $a3, $a3, 3		#nova rotacao com plot positivo
+		sll $a3, $a3, 29
+		srl $a3, $a3, 29
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal plot			#plota positivo da peca
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+
+continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
 		jal cycle			#se sim, chama a rotina cycle
 
 continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
@@ -124,23 +154,28 @@ continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
 #################################################################################################
 input:		
 		jr $ra
+#################################################################################################
+
+keyboard:	la $t1,0xFF100000
+		lw $t0,0($t1)
+		andi $t0,$t0,0x0001		# Le bit de Controle Teclado
+   		beq $t0,$zero, keyboard_end   	# Se nao ha tecla pressionada, finaliza
+  		lw $v0,4($t1)  			# Tecla lida
+		sw $v0,12($t1)  		# escreve no display de texto
+	
+keyboard_end:	jr $ra
 
 #################################################################################################
 cycle:		addu $s0, $zero, $zero		#reseta o acumulador de tempo
 
-		srl $t0, $s2, 3			#remove o tipo da peca da abstracao de peca
-		sll $a2, $s2, 29		#isola o tipo da peca no registrador a2 (mais significativo)
-		srl $a2, $a2, 29		#isola o tipo da peca no registrador a2 (menos significativo)
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal set_arguments 		#seta os argumentos com os valores relativos a peca
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
 		
-		sll $t1, $t0, 26		#isola a posicao y da peca no registrador t1 (mais significativo)
-		srl $t1, $t1, 26		#isola a posicao y da peca no registrador t1 (menos significativo)
-		addiu $a1, $t1, 1		#incrementa a posicao y da peca e coloca no registrador a1
-		srl $t0, $t0, 6			#remove a posicao y da peca da abstracao de peca
-		
+		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		bgtu $a1, 20, hitted_bottom	#se a peca chegou ao chao, vai para hitted bottom
-		sll $a0, $t0, 27		#isola a posicao x da peca no registrador a0 (mais significativo)
-		srl $a0, $a0, 27		#isola a posicao x da peca no registrador a0 (menos significativo)
-		srl $a3, $t0, 5			#isola a rotacao da peca
 		
 		addi $sp, $sp, -20
 		sw $ra, 16($sp)
@@ -157,36 +192,24 @@ cycle:		addu $s0, $zero, $zero		#reseta o acumulador de tempo
 		addi $sp, $sp, 20
 		bnez  $v0, collision		#se houver colisao, vai para collision
 		
+		subiu $t1, $a1, 1		#coloca posicao y anterior em t1
 		sll $t2, $t1, 3 		#coloca a posicao y antiga da peca nos bits certos da abstracao
 		subu $t2, $s2, $t2		#remove a posicao y antiga da peca
 		sll $t3, $a1, 3 		#coloca a posicao y nova da peca nos bits certos da abstracao
 		addu $s2, $t2, $t3		#atualiza a peca na posicao certa
 		
-		mul $a0, $a0, SIDE		#calcula a posicao x da peca considerando o tamanho do quadrado
-		addiu $a0, $a0, OFFSET_X1		#offset da peca x
-		
 		sll $a3, $a3, 1			#da shift de 1 para esquerda pois o primeiro bit simboliza o tipo do plot
-		subiu $a1, $a1, 1		#volta y para posicao anterior
-		mul $a1, $a1, SIDE		#calcula posicao y da peca considerando o tamanho do quadrado
-		addiu $a1, $a1, OFFSET_Y1		#adiciona offset de inicio da area de jogo
-		addi $sp, $sp, -20
-		sw $ra, 16($sp)
-		sw $a0, 12($sp)
-		sw $a1, 8($sp)
-		sw $a2, 4($sp)
-		sw $a3, 0($sp)
-		jal plot 			#plota o negativo da peca antiga (para apagar os vestigios dela)
-		lw $a3, 0($sp)
-		lw $a2, 4($sp)
-		lw $a1, 8($sp)
-		lw $a0, 12($sp)
-		lw $ra, 16($sp)
-		addi $sp, $sp, 20
 		
-		addiu $a1, $a1, SIDE		#seta a nova posicao y da peca com offset
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)
+		jal plot_piece			#plota negativo da peca com valores antigos
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		
+		addiu $a1, $a1, SIDE		#seta a nova posicao y da peca com offset
 		addiu $a3, $a3, 1 		#seta os bits do plot como positivo
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
 		jal plot			#plota o positivo da peca nova 
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
@@ -202,6 +225,45 @@ hitted_bottom: 	#TODO: colocar s2 na matriz
 		addu $s2, $zero, $zero
 		jr $ra
 
+#################################################################################################	
+set_arguments: 	sll $a2, $s2, 29		#isola o tipo da peca no registrador a2 (mais significativo)
+		srl $a2, $a2, 29		#isola o tipo da peca no registrador a2 (menos significativo)
+		srl $t0, $s2, 3			#remove o tipo da peca da abstracao de peca
+		
+		sll $a1, $t0, 26		#isola a posicao y da peca no registrador a1 (mais significativo)
+		srl $a1, $a1, 26		#isola a posicao y da peca no registrador a1 (menos significativo)
+		srl $t0, $t0, 6			#remove a posicao y da peca da abstracao de peca
+		
+		sll $a0, $t0, 27		#isola a posicao x da peca no registrador a0 (mais significativo)
+		srl $a0, $a0, 27		#isola a posicao x da peca no registrador a0 (menos significativo)
+		
+		sll $a3, $t0, 25		#isola a rotacao da peca na esquerda
+		srl $a3, $a3, 30		#isola a rotacao da peca na direita
+		
+		jr $ra
+		
+#################################################################################################
+plot_piece: 	mul $a0, $a0, SIDE		#calcula a posicao x da peca considerando o tamanho do quadrado
+		addiu $a0, $a0, OFFSET_X1	#offset da peca x
+		mul $a1, $a1, SIDE		#calcula posicao y da peca considerando o tamanho do quadrado
+		addiu $a1, $a1, OFFSET_Y1	#adiciona offset de inicio da area de jogo
+
+		addi $sp, $sp, -20
+		sw $ra, 16($sp)
+		sw $a0, 12($sp)
+		sw $a1, 8($sp)
+		sw $a2, 4($sp)
+		sw $a3, 0($sp)
+		jal plot 			#plota o negativo da peca antiga (para apagar os vestigios dela)
+		lw $a3, 0($sp)
+		lw $a2, 4($sp)
+		lw $a1, 8($sp)
+		lw $a0, 12($sp)
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
+		
+		jr $ra
+		
 #################################################################################################
 ######### A rotina abaixo plota uma peça. Recebe como argumento a localização (x,y), 
 ######### o tipo da peça, a rotação, e o tipo de cor (branca ou colorida).
@@ -215,9 +277,8 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sll $t3, $a3, 31	# Extrai o bit de codificacao da cor 
 		srl $t3, $t3, 31	# Extrai o bit de codificacao da cor
 		srl $a3, $a3, 1	 	# Remove bit de codificacao
-		# andi $a2, $a2, 0x07	# Extrai os bits de codificacao da peca	
 		sll $t6, $a2, 3		# Calcula o offset do endereco da matriz a ser utilizada
-		sll $a3, $a3, 2		# (offset = 8*tipo_peça + 2*rotação)
+		sll $a3, $a3, 1		# (offset = 8*tipo_peça + 2*rotação)
 		add $t6, $t6, $a3		
 
 		la $t7, L0		# Carrega endereço inicial das matrizes das peças
@@ -354,8 +415,8 @@ rand7: 		li $v0, 30         		#seta o codigo do syscall para system time
 		sll $a0, $a0, 29		#isola os 3 bits menos significativos
 		srl $a0, $a0, 29		#isola os 3 bits menos significativos
 
-		li $t0, 7			#da load no numero 8
-		bge $a0, $t0, rand7		#checa se o numero aleatorio gerado é 8, se sim gera o nome de novo
+		li $t0, 6			#da load no numero 8
+		bge $a0, $t0, rand7		#checa se o numero aleatorio gerado é maior que 6, se sim gera o nome de novo
 		addiu $v0, $a0, 0		#coloca o numero gerado no registrador v0
 		jr $ra
 
