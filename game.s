@@ -81,6 +81,55 @@ LINE_17: .word 0x0
 LINE_18: .word 0x0
 LINE_19: .word 0x0
 
+#Beeps da música
+BEEP: .byte 76 #E6
+BEEP1: .byte 71 #B5
+BEEP2: .byte 72 #C6
+BEEP3: .byte 74 #D6
+BEEP4: .byte 72 #C6
+BEEP5: .byte 71 #B5
+BEEP6: .byte 69 #A5
+BEEP7: .byte 69 #A5
+BEEP8: .byte 72 #C6
+BEEP9: .byte 76 #E6
+BEEP10: .byte 74 #D6
+BEEP11: .byte 72 #C6
+BEEP12: .byte 71 #B5
+BEEP13: .byte 71 #B5
+BEEP14: .byte 72 #C6
+BEEP15: .byte 74 #D6
+BEEP16: .byte 76 #E6
+BEEP17: .byte 72 #C6
+BEEP18: .byte 69 #A5
+BEEP19: .byte 69 #A5
+BEEP20: .byte 74 #D6
+BEEP21: .byte 77 #F6
+BEEP22: .byte 81 #A6
+BEEP23: .byte 79 #G6
+BEEP24: .byte 77 #F6
+BEEP25: .byte 76 #E6
+BEEP26: .byte 72 #C6
+BEEP27: .byte 76 #E6
+BEEP28: .byte 74 #D6
+BEEP29: .byte 72 #C6
+BEEP30: .byte 71 #B5
+BEEP31: .byte 71 #B5
+BEEP32: .byte 72 #C6
+BEEP33: .byte 74 #D6
+BEEP34: .byte 76 #E6
+BEEP35: .byte 72 #C6
+BEEP36: .byte 69 #A5
+BEEP37: .byte 69 #A5
+
+#Posição atual da musica
+MUSIC_POSITION: .word 0x0
+
+#Duração da nota
+DURATION: .byte 255
+
+#Volume da nota
+VOLUME: .byte 127
+
 .text
 MAIN:		la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
@@ -128,6 +177,7 @@ pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
 game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		addiu $s1, $v0, 0		#coloca o tempo do sistema no registrador s1
 		
+		
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
 		li $s2, INIT_PIECE		#inicializa uma nova peca
@@ -145,7 +195,7 @@ continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
-continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
+continue_gl1:	ble $s0, 300,continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
 		addu $s0, $zero, $zero		#reseta o acumulador de tempo
 		la $t0, update_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL1		#salva o valor do endereco da label no endereco ARG_LABEL1
@@ -160,7 +210,9 @@ continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficient
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
+				
 		bnez $v0, collision		#se houver colisao, vai para collision
+		jal play_music			#toca um beep da musica
 
 continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
 		subu $t0, $v0, $s1		#calcula o tempo que o ciclo demorou
@@ -316,6 +368,33 @@ c_collided:	addiu $v0, $zero, 1
 
 #-----------------------------------------------------------------------------------------------#
 collision: 	#TODO: implementar casos de colisao
+		
+		
+		#Barulhinho de quando termina uma linha
+		#syscall 33 - síncrono
+		li $v0,33
+
+		#duracao
+		la $a1, DURATION
+		lbu $a1,1($a1)
+
+		#Instrumento
+		la $a2,1
+		lbu $a2,0($a2)
+
+		#volume
+		la $a3, VOLUME
+		lbu $a3,0($a3)
+		
+		la $a0, 50
+		lbu $a0,0($a0)
+		syscall #beep
+		
+		la $a0, 60
+		lbu $a0, 0($a0)
+		syscall #beep
+		
+		
 		addu $s2, $zero, $zero
 		jr $ra
 		
@@ -715,4 +794,35 @@ passa_wscore:	lw $a0, 0($sp)
 		addi $sp, $sp, 16
 		
 		
+		jr $ra
+
+#################################################################################################
+######### Toca uma nota da música
+#################################################################################################
+play_music:	li $v0,31 #syscall 31 - assíncrono
+		la $a1,DURATION #duracao
+		lbu $a1,1($a1)
+
+		#Instrumento
+		la $a2,1
+		lbu $a2,0($a2)
+
+		#volume
+		la $a3,VOLUME
+		lbu $a3,0($a3)
+
+		#registrador para saber onde esta a musica
+		lw $t0, MUSIC_POSITION
+
+		la $a0,BEEP + 0($t0)
+		lbu $a0,0($a0)
+		syscall #beep
+		beq $t0,37,reset_music #37 notas
+		addi $t0,$t0,1 #pula pro proximo beep
+
+		sw $t0, MUSIC_POSITION
+		
+		jr $ra
+		
+reset_music:	sw $zero, MUSIC_POSITION #volta musica pro beep 0
 		jr $ra
