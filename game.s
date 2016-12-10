@@ -60,7 +60,9 @@ ARG_LABEL2: .word 0x0		# Argumento que vai conter a label para possiveis jumps i
 ARG_LABEL3: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 
 # Matriz do jogo
-LINE_O:  .word 0x0
+PRE_2:	 .word 0x0
+PRE_1:   .word 0x0
+LINE_0:  .word 0x0
 LINE_1:  .word 0x0
 LINE_2:  .word 0x0
 LINE_3:  .word 0x0
@@ -82,7 +84,7 @@ LINE_18: .word 0x0
 LINE_19: .word 0x0
 
 .text
-MAIN:		la $a0, MSG0		# Pergunta quantidade de jogadores
+MAIN:	la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
 		li $a2, 3
 		li $a3, 0xFF00
@@ -139,11 +141,7 @@ continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		beq $v0, 0, continue_gl1	#se nao teve input, continua o loop
 		
 		add $a0, $v0, $zero		#seta o codigo da tecla pressionada como argumento
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
 		jal input 			#senao, trata input
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
 		
 continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
 		addu $s0, $zero, $zero		#reseta o acumulador de tempo
@@ -154,14 +152,11 @@ continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficient
 		la $t0, reset_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL3		#salva o valor do endereco da label no endereco ARG_LABEL3
 		
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		jal cycle
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		jal cycle		
+		beqz $v0, continue_gl2		#se nao houver colisao, vai para continue_gl2
 		
-		bnez $v0, collision		#se houver colisao, vai para collision
-
+		jal collision
+		
 continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
 		subu $t0, $v0, $s1		#calcula o tempo que o ciclo demorou
 		addu $s0, $s0, $t0		#incrementa o acumulador de tempo
@@ -253,9 +248,7 @@ down:		la $t0, update_down		#seta label a ser usada como argumento
 		jr $ra
 		
 #################################################################################################
-cycle:		li $v0, 0
-
-		addi $sp, $sp, -4
+cycle:		addi $sp, $sp, -4
 		sw $ra, 0($sp)
 		jal set_arguments 		#seta os argumentos com os valores relativos a peca
 		lw $ra, 0($sp)
@@ -292,11 +285,19 @@ cycle:		li $v0, 0
 		
 		sll $a3, $a3, 1			#da shift de 1 para esquerda pois o primeiro bit simboliza o tipo do plot
 		
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
+		addi $sp, $sp, -20
+		sw $ra, 16($sp)
+		sw $a0, 12($sp)
+		sw $a1, 8($sp)
+		sw $a2, 4($sp)
+		sw $a3, 0($sp)
 		jal plot_piece			#plota negativo da peca com valores antigos
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		lw $a3, 0($sp)
+		lw $a2, 4($sp)
+		lw $a1, 8($sp)
+		lw $a0, 12($sp)
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
 		
 		lw $t0, ARG_LABEL3		#carrega metodo que seta a peca nova de a ser chamado
 		addi $sp, $sp, -4
@@ -307,24 +308,15 @@ cycle:		li $v0, 0
 		
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)
-		jal plot			#plota o positivo da peca nova 
+		jal plot_piece			#plota o positivo da peca nova 
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
-		jr $ra				
+		
+		jr $ra			
+			
 c_collided:	addiu $v0, $zero, 1
 		jr $ra
-
-#-----------------------------------------------------------------------------------------------#
-collision: 	#TODO: implementar casos de colisao
-		addu $s2, $zero, $zero
-		jr $ra
 		
-#-----------------------------------------------------------------------------------------------#
-hitted_bottom: 	#TODO: colocar s2 na matriz
-		addu $s2, $zero, $zero
-		jr $ra
-
-
 #################################################################################################
 update_down:	addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		jr $ra
@@ -338,7 +330,7 @@ after_down:	subiu $t1, $a1, 1		#coloca posicao y anterior em t1
 		jr $ra
 		
 #################################################################################################
-reset_down:	addiu $a1, $a1, SIDE		#seta a nova posicao y da peca com offset
+reset_down:	addiu $a1, $a1, 1		#seta a nova posicao y da peca com offset
 		addiu $a3, $a3, 1 		#seta os bits do plot como positivo
 		jr $ra
 
@@ -375,7 +367,7 @@ after_left:	addiu $a0, $a0, 1		#incrementa a posicao x
 		jr $ra
 		
 #################################################################################################
-reset_left:	subi $a0, $a0, SIDE		#seta a nova posicao x da peca com offset
+reset_left:	subi $a0, $a0, 1		#seta a nova posicao x da peca com offset
 		addiu $a3, $a3, 1 		#seta os bits do plot como positivo
 		jr $ra
 
@@ -394,7 +386,7 @@ after_right:	subiu $a0, $a0, 1		#incrementa a posicao x
 		jr $ra
 		
 #################################################################################################
-reset_right:	addiu $a0, $a0, SIDE		#seta a nova posicao x da peca com offset
+reset_right:	addiu $a0, $a0, 1		#seta a nova posicao x da peca com offset
 		addiu $a3, $a3, 1 		#seta os bits do plot como positivo
 		jr $ra		
 			
@@ -416,14 +408,135 @@ set_arguments: 	sll $a2, $s2, 29		#isola o tipo da peca no registrador a2 (mais 
 		jr $ra
 						
 #################################################################################################
-collision_check: #TODO: implementar o teste de colisao
-		bge $a1, 21, collided
-		bge $a0, 9, collided
-		bltz $a0, collided		#se ultrapassou o limite da parede
-		addu $v0, $zero, $zero		#TODO: implementar correto valor para v0
+collision_check:addu $v0, $zero, $zero
+		bltz $a0, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
+
+		subiu $t0, $a2, 1		#decrementa o tipo da peca
+		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
+		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
+		addu $t0, $t0, $t1		#offset das half words das pecas
+		la $t1, L0			#carrega o inicio da matriz das pecas
+		addu $t1, $t1, $t0		#soma o endereco do inicio da matriz com o offset
+		lhu $t0, 0($t1)			#carrega matriz da peca no registrador t0
+		
+		addu $t3, $zero, $zero		#inicializa contador da peca
+		
+		subiu $t2, $a1, 2		#retira posicoes fantasma
+		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
+		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+		
+		la $t8, LINE_19			#carrega o endereco da ultima linha da matriz
+		
+loop_check:	bgeu $t3, 15, end_check		#se contador de colunas >= que 16, sai do loop
+		li $t4, 16			#carrega o imediato 16 no registrador t4
+		subu $t4, $t4, $t3		#calcula o bit a ser analisado da peca
+		
+		subiu $t4, $t4, 1		#decrementa registrador t4
+		li $t5, 1			#coloca o imediato 1 no registrador t5
+		sllv $t4, $t5, $t4		#seta como 1 so o bit a ser analisado da peca
+		and $t5, $t4, $t0 		#checa se a posicao atual na abstracao da peca e' um
+		beqz $t5, loop_check_1		#se a posicao atual e'nula, continua sem colisao
+		
+		bgt $t1, $t8, collided		#se collidiu com o chão, vai para collided
+		bgeu $t2, 30, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
+		
+		lw $t6, 0($t1)			#carrega linha da matriz
+		li $t7, 29			#carrega 29 no registrador t7
+		subu $t7, $t7, $t2		#calcula shift left offset
+		sllv $t6, $t6, $t7		#limpa valores pra esquerda
+		srlv $t6, $t6, $t7		#limpa valores pra esquerda
+		srlv $t6, $t6, $t2		#acaba de isolar bits que salvam se tem uma peca no lugar checado
+		bnez $t6, collided		#se tem uma peca naquele lugar, vai para collided
+				
+loop_check_1:	addiu $t3, $t3, 1		#incrementa contador da peca
+		addiu $t2, $t2, 3		#incrementa o offset da coluna na matriz
+		li $t6, 4			#carrega 4 no registrador $t6
+		div $t3, $t6			#divide para checar qual linha da peca esta
+		mfhi $t6			#pega reminder
+		bnez $t6, loop_check_2		#se nao esta na proxima linha da peca, continua
+		
+		addiu $t1, $t1, 4		#incrementa endereco t1
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+			
+loop_check_2:	j loop_check			#vai pra inicio do loop
+end_check:
+
 		jr $ra
-collided: 	addiu $v0, $zero, 1		#TODO: implementar correto valor para v0
+
+collided: 	addiu $v0, $zero, 1
 		jr $ra
+
+#################################################################################################
+collision: 	addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal set_arguments 		#seta os argumentos com os valores relativos a peca
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		
+		#ble $a1, 1, collision_end	#se a peca esta fora pra cima, nao salva
+		
+		subiu $t0, $a2, 1		#decrementa o tipo da peca
+		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
+		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
+		addu $t0, $t0, $t1		#offset das half words das pecas
+		la $t1, L0			#carrega o inicio da matriz das pecas
+		addu $t1, $t1, $t0		#soma o endereco do inicio da matriz com o offset
+		lhu $t0, 0($t1)			#carrega matriz da peca no registrador t0
+		
+		addu $t3, $zero, $zero		#inicializa contador da peca
+		
+		subiu $t2, $a1, 2		#retira posicoes fantasma
+		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
+		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+		
+		
+loop_save:	bgeu $t3, 15, end_loop_save	#se contador de colunas >= que 16, sai do loop
+		li $t4, 16			#carrega o imediato 16 no registrador t4
+		subu $t4, $t4, $t3		#calcula o bit a ser analisado da peca
+		
+		subiu $t4, $t4, 1		#decrementa registrador t4
+		li $t5, 1			#coloca o imediato 1 no registrador t5
+		sllv $t4, $t5, $t4		#seta como 1 so o bit a ser analisado da peca
+		and $t5, $t4, $t0 		#checa se a posicao atual na abstracao da peca e' um
+		beqz $t5, loop_save_1		#se a posicao atual e'nula, continua sem salvar
+		
+		addu $t6, $a2, $zero		#coloca o valor do tipo da peca no registrador t7
+		sllv $t6, $t6, $t2		#coloca o valor do tipo no local onde ta o quadrado da peca
+		lw $t7, 0($t1)			#carrega linha da matriz
+		addu $t7, $t7, $t6		#salva quadrado da peca
+		sw $t7, 0($t1)			#salva linha atualizada na memoria 
+				
+loop_save_1:	addiu $t3, $t3, 1		#incrementa contador da peca
+		addiu $t2, $t2, 3		#incrementa o offset da coluna na matriz
+		li $t6, 4			#carrega 4 no registrador $t6
+		div $t3, $t6			#divide para checar qual linha da peca esta
+		mfhi $t6			#pega reminder
+		bnez $t6, loop_save_2		#se nao esta na proxima linha da peca, continua
+		
+		addiu $t1, $t1, 4		#incrementa endereco t1
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+			
+loop_save_2:	j loop_save			#vai pra inicio do loop
+end_loop_save:	
+
+		addu $s2, $zero, $zero		#reseta peca movel
+		
+collision_end:	jr $ra
+
 #################################################################################################
 sys_time: 	li $v0, 30         		#seta o codigo do syscall para system time
 		syscall				#chamada do systema para colocar o tempo do sistema no registrador a0
@@ -441,7 +554,7 @@ rand7: 		li $v0, 30         		#seta o codigo do syscall para system time
 
 		li $t0, 6			#da load no numero 8
 		bge $a0, $t0, rand7		#checa se o numero aleatorio gerado é maior que 6, se sim gera o nome de novo
-		addiu $v0, $a0, 0		#coloca o numero gerado no registrador v0
+		addiu $v0, $a0, 1		#coloca o numero gerado no registrador v0 acrescido de 1
 		jr $ra
 		
 #################################################################################################
@@ -481,7 +594,8 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sll $t3, $a3, 31	# Extrai o bit de codificacao da cor 
 		srl $t3, $t3, 31	# Extrai o bit de codificacao da cor
 		srl $a3, $a3, 1	 	# Remove bit de codificacao
-		sll $t6, $a2, 3		# Calcula o offset do endereco da matriz a ser utilizada
+		subiu $t6, $a2, 1	# Decrementa tipo
+		sll $t6, $t6, 3		# Calcula o offset do endereco da matriz a ser utilizada
 		sll $a3, $a3, 1		# (offset = 8*tipo_peça + 2*rotação)
 		add $t6, $t6, $a3		
 
@@ -495,13 +609,14 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		
 		# Os blocos abaixo definem a cor do plot
 		beqz $t3, color_black
-		beqz $a2, color_red
-		beq $a2, 1, color_blue
-		beq $a2, 2, color_green
-		beq $a2, 3, color_pink
-		beq $a2, 4, color_orange
-		beq $a2, 5, color_db
-		beq $a2, 6, color_purple
+		beqz $a2, sai_plot0
+		beq $a2, 1, color_red
+		beq $a2, 2, color_blue
+		beq $a2, 3, color_green
+		beq $a2, 4, color_pink
+		beq $a2, 5, color_orange
+		beq $a2, 6, color_db
+		beq $a2, 7, color_purple
 
 color_red:	li $a3, RED
 		j loop_plot0
