@@ -60,6 +60,8 @@ ARG_LABEL2: .word 0x0		# Argumento que vai conter a label para possiveis jumps i
 ARG_LABEL3: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 
 # Matriz do jogo
+PRE_2:	 .word 0x0
+PRE_1:   .word 0x0
 LINE_0:  .word 0x0
 LINE_1:  .word 0x0
 LINE_2:  .word 0x0
@@ -406,7 +408,8 @@ set_arguments: 	sll $a2, $s2, 29		#isola o tipo da peca no registrador a2 (mais 
 		jr $ra
 						
 #################################################################################################
-collision_check:bltz $a0, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
+collision_check:addu $v0, $zero, $zero
+		bltz $a0, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
 
 		subiu $t0, $a2, 1		#decrementa o tipo da peca
 		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
@@ -429,7 +432,7 @@ collision_check:bltz $a0, collided		#se ultrapassou o limite da parede da esquer
 		
 		la $t8, LINE_19			#carrega o endereco da ultima linha da matriz
 		
-loop_check:	bgeu $t3, 15, end_loop_check	#se contador de colunas >= que 16, sai do loop
+loop_check:	bgeu $t3, 15, end_check		#se contador de colunas >= que 16, sai do loop
 		li $t4, 16			#carrega o imediato 16 no registrador t4
 		subu $t4, $t4, $t3		#calcula o bit a ser analisado da peca
 		
@@ -463,9 +466,8 @@ loop_check_1:	addiu $t3, $t3, 1		#incrementa contador da peca
 		mflo $t2			#move o resultado do offset para o registrador t2
 			
 loop_check_2:	j loop_check			#vai pra inicio do loop
-end_loop_check:
+end_check:
 
-		addu $v0, $zero, $zero
 		jr $ra
 
 collided: 	addiu $v0, $zero, 1
@@ -478,7 +480,7 @@ collision: 	addi $sp, $sp, -4
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
-		ble $a1, 1, collision_end	#se a peca esta fora pra cima, nao salva
+		#ble $a1, 1, collision_end	#se a peca esta fora pra cima, nao salva
 		
 		subiu $t0, $a2, 1		#decrementa o tipo da peca
 		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
