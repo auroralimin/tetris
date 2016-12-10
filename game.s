@@ -139,11 +139,7 @@ continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		beq $v0, 0, continue_gl1	#se nao teve input, continua o loop
 		
 		add $a0, $v0, $zero		#seta o codigo da tecla pressionada como argumento
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
 		jal input 			#senao, trata input
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
 		
 continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
 		addu $s0, $zero, $zero		#reseta o acumulador de tempo
@@ -154,14 +150,11 @@ continue_gl1:	ble $s0, 300, continue_gl2	#checa se há tempo acumulado suficient
 		la $t0, reset_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL3		#salva o valor do endereco da label no endereco ARG_LABEL3
 		
-		addi $sp, $sp, -4
-		sw $ra, 0($sp)
-		jal cycle
-		lw $ra, 0($sp)
-		addi $sp, $sp, 4
+		jal cycle		
+		beqz $v0, continue_gl2		#se nao houver colisao, vai para continue_gl2
 		
-		bnez $v0, collision		#se houver colisao, vai para collision
-
+		jal collision
+		
 continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
 		subu $t0, $v0, $s1		#calcula o tempo que o ciclo demorou
 		addu $s0, $s0, $t0		#incrementa o acumulador de tempo
@@ -253,9 +246,7 @@ down:		la $t0, update_down		#seta label a ser usada como argumento
 		jr $ra
 		
 #################################################################################################
-cycle:		li $v0, 0
-
-		addi $sp, $sp, -4
+cycle:		addi $sp, $sp, -4
 		sw $ra, 0($sp)
 		jal set_arguments 		#seta os argumentos com os valores relativos a peca
 		lw $ra, 0($sp)
@@ -318,7 +309,9 @@ cycle:		li $v0, 0
 		jal plot_piece			#plota o positivo da peca nova 
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
-		jr $ra				
+		
+		jr $ra			
+			
 c_collided:	addiu $v0, $zero, 1
 		jr $ra
 		
@@ -413,13 +406,69 @@ set_arguments: 	sll $a2, $s2, 29		#isola o tipo da peca no registrador a2 (mais 
 		jr $ra
 						
 #################################################################################################
-collision_check: #TODO: implementar o teste de colisao
-		bge $a1, 21, collided
-		bge $a0, 9, collided
-		bltz $a0, collided		#se ultrapassou o limite da parede
-		addu $v0, $zero, $zero		#TODO: implementar correto valor para v0
+collision_check:bltz $a0, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
+
+		subiu $t0, $a2, 1		#decrementa o tipo da peca
+		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
+		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
+		addu $t0, $t0, $t1		#offset das half words das pecas
+		la $t1, L0			#carrega o inicio da matriz das pecas
+		addu $t1, $t1, $t0		#soma o endereco do inicio da matriz com o offset
+		lhu $t0, 0($t1)			#carrega matriz da peca no registrador t0
+		
+		addu $t3, $zero, $zero		#inicializa contador da peca
+		
+		subiu $t2, $a1, 2		#retira posicoes fantasma
+		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
+		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+		
+		la $t8, LINE_19			#carrega o endereco da ultima linha da matriz
+		
+loop_check:	bgeu $t3, 15, end_loop_check	#se contador de colunas >= que 16, sai do loop
+		li $t4, 16			#carrega o imediato 16 no registrador t4
+		subu $t4, $t4, $t3		#calcula o bit a ser analisado da peca
+		
+		subiu $t4, $t4, 1		#decrementa registrador t4
+		li $t5, 1			#coloca o imediato 1 no registrador t5
+		sllv $t4, $t5, $t4		#seta como 1 so o bit a ser analisado da peca
+		and $t5, $t4, $t0 		#checa se a posicao atual na abstracao da peca e' um
+		beqz $t5, loop_check_1		#se a posicao atual e'nula, continua sem colisao
+		
+		bgt $t1, $t8, collided		#se collidiu com o chão, vai para collided
+		bgeu $t2, 30, collided		#se ultrapassou o limite da parede da esquerda, vai para collided
+		
+		lw $t6, 0($t1)			#carrega linha da matriz
+		li $t7, 29			#carrega 29 no registrador t7
+		subu $t7, $t7, $t2		#calcula shift left offset
+		sllv $t6, $t6, $t7		#limpa valores pra esquerda
+		srlv $t6, $t6, $t7		#limpa valores pra esquerda
+		srlv $t6, $t6, $t2		#acaba de isolar bits que salvam se tem uma peca no lugar checado
+		bnez $t6, collided		#se tem uma peca naquele lugar, vai para collided
+				
+loop_check_1:	addiu $t3, $t3, 1		#incrementa contador da peca
+		addiu $t2, $t2, 3		#incrementa o offset da coluna na matriz
+		li $t6, 4			#carrega 4 no registrador $t6
+		div $t3, $t6			#divide para checar qual linha da peca esta
+		mfhi $t6			#pega reminder
+		bnez $t6, loop_check_2		#se nao esta na proxima linha da peca, continua
+		
+		addiu $t1, $t1, 4		#incrementa endereco t1
+		li $t2, 3			#seta registrador t3 como 3
+		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
+		mflo $t2			#move o resultado do offset para o registrador t2
+			
+loop_check_2:	j loop_check			#vai pra inicio do loop
+end_loop_check:
+
+		addu $v0, $zero, $zero
 		jr $ra
-collided: 	addiu $v0, $zero, 1		#TODO: implementar correto valor para v0
+
+collided: 	addiu $v0, $zero, 1
 		jr $ra
 
 #################################################################################################
@@ -429,6 +478,8 @@ collision: 	addi $sp, $sp, -4
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
+		ble $a1, 1, collision_end	#se a peca esta fora pra cima, nao salva
+		
 		subiu $t0, $a2, 1		#decrementa o tipo da peca
 		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
 		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
@@ -437,7 +488,7 @@ collision: 	addi $sp, $sp, -4
 		addu $t1, $t1, $t0		#soma o endereco do inicio da matriz com o offset
 		lhu $t0, 0($t1)			#carrega matriz da peca no registrador t0
 		
-		addu $t3, $zero, $zero		#inicializa contador de colunas
+		addu $t3, $zero, $zero		#inicializa contador da peca
 		
 		subiu $t2, $a1, 2		#retira posicoes fantasma
 		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
@@ -465,7 +516,7 @@ loop_save:	bgeu $t3, 15, end_loop_save	#se contador de colunas >= que 16, sai do
 		addu $t7, $t7, $t6		#salva quadrado da peca
 		sw $t7, 0($t1)			#salva linha atualizada na memoria 
 				
-loop_save_1:	addiu $t3, $t3, 1		#incrementa contador de colunas
+loop_save_1:	addiu $t3, $t3, 1		#incrementa contador da peca
 		addiu $t2, $t2, 3		#incrementa o offset da coluna na matriz
 		li $t6, 4			#carrega 4 no registrador $t6
 		div $t3, $t6			#divide para checar qual linha da peca esta
@@ -478,18 +529,11 @@ loop_save_1:	addiu $t3, $t3, 1		#incrementa contador de colunas
 		mflo $t2			#move o resultado do offset para o registrador t2
 			
 loop_save_2:	j loop_save			#vai pra inicio do loop
-end_loop_save:	addu $s2, $zero, $zero		#reseta peca movel
-	
-		la $t0, LINE_18
-		lw $t1, 0($t0)
-		addiu $t0, $t0, 4
-		lw $t2, 0($t0)
-		addiu $t0, $t0, 4
-		lw $t3, 0($t0)
-		addiu $t0, $t0, 4
-		lw $t4, 0($t0)
+end_loop_save:	
+
+		addu $s2, $zero, $zero		#reseta peca movel
 		
-		jr $ra
+collision_end:	jr $ra
 
 #################################################################################################
 sys_time: 	li $v0, 30         		#seta o codigo do syscall para system time
