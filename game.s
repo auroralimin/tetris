@@ -24,7 +24,7 @@
 .eqv PURPLE 0xCC
 
 # Pecas iniciais
-.eqv INIT_PIECE 0x602
+.eqv INIT_PIECE 0x600
 
 # Offset players
 .eqv OFFSET_X1 125
@@ -131,8 +131,8 @@ game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
 		li $s2, INIT_PIECE		#inicializa uma nova peca
-		#addiu $s2, $s2, 1
-		#addu $s2, $s2, $v0		#seta o tipo da peca
+		addiu $s2, $s2, 1
+		addu $s2, $s2, $v0		#seta o tipo da peca
 		li $s0, 501			#acumula tempo suficiente pra ciclo
 
 continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
@@ -429,8 +429,8 @@ collision: 	addi $sp, $sp, -4
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
-		li $t0, 0			#reseta registrador t0
-		sll $t0, $a2, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
+		subiu $t0, $a2, 1		#decrementa o tipo da peca
+		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
 		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
 		addu $t0, $t0, $t1		#offset das half words das pecas
 		la $t1, L0			#carrega o inicio da matriz das pecas
@@ -548,7 +548,8 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sll $t3, $a3, 31	# Extrai o bit de codificacao da cor 
 		srl $t3, $t3, 31	# Extrai o bit de codificacao da cor
 		srl $a3, $a3, 1	 	# Remove bit de codificacao
-		sll $t6, $a2, 3		# Calcula o offset do endereco da matriz a ser utilizada
+		subiu $t6, $a2, 1	# Decrementa tipo
+		sll $t6, $t6, 3		# Calcula o offset do endereco da matriz a ser utilizada
 		sll $a3, $a3, 1		# (offset = 8*tipo_peça + 2*rotação)
 		add $t6, $t6, $a3		
 
@@ -562,13 +563,14 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		
 		# Os blocos abaixo definem a cor do plot
 		beqz $t3, color_black
-		beqz $a2, color_red
-		beq $a2, 1, color_blue
-		beq $a2, 2, color_green
-		beq $a2, 3, color_pink
-		beq $a2, 4, color_orange
-		beq $a2, 5, color_db
-		beq $a2, 6, color_purple
+		beqz $a2, sai_plot0
+		beq $a2, 1, color_red
+		beq $a2, 2, color_blue
+		beq $a2, 3, color_green
+		beq $a2, 4, color_pink
+		beq $a2, 5, color_orange
+		beq $a2, 6, color_db
+		beq $a2, 7, color_purple
 
 color_red:	li $a3, RED
 		j loop_plot0
