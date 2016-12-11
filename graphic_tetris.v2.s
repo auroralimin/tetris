@@ -12,16 +12,14 @@
 
 # Cores
 .eqv BLACK 0x00
-.eqv DARK_RED 0x03
-.eqv RED 0x0F
+.eqv RED 0x0F #0x03
 .eqv ORANGE 0x1F
 .eqv GREEN 0x30
 .eqv YELLOW 0x3F
-.eqv DARK_BLUE 0x8A
-.eqv PINK 0x86
-.eqv BLUE 0xF0
+.eqv DARK_BLUE 0x99
+.eqv CYAN 0xF0
 .eqv WHITE 0xFF
-.eqv PURPLE 0xCC
+.eqv PURPLE 0xCC #0x87
 
 .data
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
@@ -209,7 +207,7 @@ pass_main:	lw $s0, 0($t0)		# Carrega parâmetros da memória
 		
 		li $a0, 43		# Plota a peça Q em todas as rotações
 		li $a1, 170
-		li $a2, 0xE
+		li $a2, 6
 		li $a3, 0
 		jal plot
 		addi $a0, $a0, 78
@@ -225,10 +223,10 @@ pass_main:	lw $s0, 0($t0)		# Carrega parâmetros da memória
 		li $a0, 2
 		li $a1, 0
 		li $a2, 3
-		jal plot_matrix
+		#jal plot_matrix
 		
 		li $a0, 0
-		jal game_over
+		#jal game_over
 		
 		li $v0, 10
 		syscall
@@ -281,34 +279,34 @@ plot:		addi $sp, $sp, -16	# Salva os argumentos na pilha
 		la $t7, L0		# Carrega endereço inicial das matrizes das peças
 		add $t7, $t7, $t6	# Faz end = end_inicial + offset
 		
-		lh $t6, 0($t7)		# Carrega a matriz a ser utilizada
+		lhu $t6, 0($t7)		# Carrega a matriz a ser utilizada
 		li $t2, 4		# Tamanho da matriz
 		move $t7, $zero		# Inicializa i
 		move $t0, $zero		# Inicializa contador
 		
 		# Os blocos abaixo definem a cor do plot
-		bne $t3, $zero, color_white
-		beq $a2, $zero, color_red
-		beq $a2, 1, color_blue
-		beq $a2, 2, color_green
-		beq $a2, 3, color_pink
-		beq $a2, 4, color_orange
-		beq $a2, 5, color_db
-		beq $a2, 6, color_purple
+		bnez $t3, color_black
+		beq $a2, 0, color_orange
+		beq $a2, 1, color_cyan
+		beq $a2, 2, color_blue
+		beq $a2, 3, color_purple
+		beq $a2, 4, color_green
+		beq $a2, 5, color_red
+		beq $a2, 6, color_yellow
 
 color_red:	li $a3, RED
 		j loop_plot0
 
-color_blue:	li $a3, BLUE
+color_cyan:	li $a3, CYAN
 		j loop_plot0
 	
 color_green:	li $a3, GREEN
 		j loop_plot0
 		
-color_pink:	li $a3, PINK
+color_yellow:	li $a3, YELLOW
 		j loop_plot0
 
-color_db:	li $a3, DARK_BLUE
+color_blue:	li $a3, DARK_BLUE
 		j loop_plot0
 	
 color_purple:	li $a3, PURPLE
@@ -317,7 +315,7 @@ color_purple:	li $a3, PURPLE
 color_orange:	li $a3, ORANGE
 		j loop_plot0
 		
-color_white:	li $a3, WHITE
+color_black:	li $a3, BLACK
 				
 # Loop de plot da matriz
 loop_plot0:	beq $t0, $t2, sai_plot0		# Se i = 4, sai
@@ -513,13 +511,13 @@ loop_line:	bge $t1, 70, end_line
 		srl $t0, $t0, 3
 		
 		beq $t2, $zero, lcolor_black
-		beq $t2, 1, lcolor_red
-		beq $t2, 2, lcolor_blue
-		beq $t2, 3, lcolor_green
-		beq $t2, 4, lcolor_pink
-		beq $t2, 5, lcolor_orange
-		beq $t2, 6, lcolor_db
-		beq $t2, 7, lcolor_purple
+		beq $t2, 1, lcolor_orange
+		beq $t2, 2, lcolor_cyan
+		beq $t2, 3, lcolor_blue
+		beq $t2, 4, lcolor_purple
+		beq $t2, 5, lcolor_green
+		beq $t2, 6, lcolor_red
+		beq $t2, 7, lcolor_yellow
 		
 lcolor_black:	li $a3, BLACK
 		j loop_plot_line
@@ -527,16 +525,16 @@ lcolor_black:	li $a3, BLACK
 lcolor_red:	li $a3, RED
 		j loop_plot_line
 
-lcolor_blue:	li $a3, BLUE
+lcolor_cyan:	li $a3, CYAN
 		j loop_plot_line
 	
 lcolor_green:	li $a3, GREEN
 		j loop_plot_line
 		
-lcolor_pink:	li $a3, PINK
+lcolor_yellow:	li $a3, YELLOW
 		j loop_plot_line
 
-lcolor_db:	li $a3, DARK_BLUE
+lcolor_blue:	li $a3, DARK_BLUE
 		j loop_plot_line
 	
 lcolor_purple:	li $a3, PURPLE
