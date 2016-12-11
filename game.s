@@ -83,6 +83,28 @@ LINE_17: .word 0x0
 LINE_18: .word 0x0
 LINE_19: .word 0x0
 
+# Contadores da matriz do jogo
+I_0:  .byte 0x0
+I_1:  .byte 0x0
+I_2:  .byte 0x0
+I_3:  .byte 0x0
+I_4:  .byte 0x0
+I_5:  .byte 0x0
+I_6:  .byte 0x0
+I_7:  .byte 0x0
+I_8:  .byte 0x0
+I_9:  .byte 0x0
+I_10: .byte 0x0
+I_11: .byte 0x0
+I_12: .byte 0x0
+I_13: .byte 0x0
+I_14: .byte 0x0
+I_15: .byte 0x0
+I_16: .byte 0x0
+I_17: .byte 0x0
+I_18: .byte 0x0
+I_19: .byte 0x0
+
 .text
 MAIN:	la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
@@ -480,8 +502,6 @@ collision: 	addi $sp, $sp, -4
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		
-		#ble $a1, 1, collision_end	#se a peca esta fora pra cima, nao salva
-		
 		subiu $t0, $a2, 1		#decrementa o tipo da peca
 		sll $t0, $t0, 3			#calcula o offset do endereco da matriz de peca a ser utilizada
 		sll $t1, $a3, 1			#(offset = 8*tipo_peça + 2*rotação)
@@ -491,16 +511,19 @@ collision: 	addi $sp, $sp, -4
 		lhu $t0, 0($t1)			#carrega matriz da peca no registrador t0
 		
 		addu $t3, $zero, $zero		#inicializa contador da peca
+
+		subiu $a1, $a1, 2		#retira posicoes fantasma
 		
-		subiu $t2, $a1, 2		#retira posicoes fantasma
-		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
+		sll $t2, $a1, 2			#calcula offset da linha da matriz do jogo
 		la $t1, LINE_0			#carrega o inicio da matriz do jogo
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+
+		la $t8, I_0			#carrega o endereco do inicio dos indexes da matriz
+		add $t8, $t8, $a1		#coloca o endereco da posicao da matriz no registrador t8
 
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
 		mflo $t2			#move o resultado do offset para o registrador t2
-		
 		
 loop_save:	bgeu $t3, 15, end_loop_save	#se contador de colunas >= que 16, sai do loop
 		li $t4, 16			#carrega o imediato 16 no registrador t4
@@ -516,7 +539,11 @@ loop_save:	bgeu $t3, 15, end_loop_save	#se contador de colunas >= que 16, sai do
 		sllv $t6, $t6, $t2		#coloca o valor do tipo no local onde ta o quadrado da peca
 		lw $t7, 0($t1)			#carrega linha da matriz
 		addu $t7, $t7, $t6		#salva quadrado da peca
-		sw $t7, 0($t1)			#salva linha atualizada na memoria 
+		sw $t7, 0($t1)			#salva linha atualizada na memoria
+		
+		lb $t9, 0($t8)			#carrega index da linha da matriz
+		addiu $t9, $t9, 1		#incrementa o index
+		sb $t9, 0($t8) 			#salva o index da linha da matriz
 				
 loop_save_1:	addiu $t3, $t3, 1		#incrementa contador da peca
 		addiu $t2, $t2, 3		#incrementa o offset da coluna na matriz
@@ -526,6 +553,7 @@ loop_save_1:	addiu $t3, $t3, 1		#incrementa contador da peca
 		bnez $t6, loop_save_2		#se nao esta na proxima linha da peca, continua
 		
 		addiu $t1, $t1, 4		#incrementa endereco t1
+		addiu $t8, $t8, 1		#incrementa endereco t8
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
 		mflo $t2			#move o resultado do offset para o registrador t2
@@ -534,6 +562,60 @@ loop_save_2:	j loop_save			#vai pra inicio do loop
 end_loop_save:	
 
 		addu $s2, $zero, $zero		#reseta peca movel
+		
+		la $t0, I_19			#carrega o endereco do ultimo index da matriz
+		la $t1, I_0			#carrega o endereco do primeiro index da matriz
+		la $t2, LINE_19			#carrega o endereco da ultima linha da matriz
+		la $t3, LINE_0			#carrega o endereco da primeira linha da matriz
+						
+loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda, sai do loop
+		lb $t4, 0($t0)			#carrega o index
+
+		bne $t4, 10, loop_l_1		#se a linha nao esta completa, continua sem modificar
+		
+		addiu $t4, $t2, 0		#copia o endereco da linha da matriz
+		addiu $t5, $t0, 0		#copia o index da linha da matriz
+		loop_u: 	bleu $t4, $t3, loop_u_end	#se ja percorreu a matriz toda, sai do loop
+				lw $t6, 0($t4)			#carrega linha a ser atualizada
+				beqz $t6, loop_u_end		#se a linha a ser atualizada ja e nula, sai do loop
+			
+				lw $t6, -4($t4)			#carrega linha a ser copiada
+				sw $t6, 0($t4)			#atualiza linha atual	
+				lb $t6, -1($t5)			#carrega index a ser copiado
+				sb $t6, 0($t5)			#atualiza index atual
+				
+				subu $t7, $t4, $t3		#calcula as diferencas dos enderecos
+				div $a0, $t7, 4			#seta o argumento com a linha modificada
+				li $a1, 3			#seta o player
+				
+				addi $sp, $sp, -28
+				sw $ra, 0($sp)
+				sw $t0, 4($sp)
+				sw $t1, 8($sp)
+				sw $t2, 12($sp)
+				sw $t3, 16($sp)
+				sw $t4, 20($sp)
+				sw $t5, 24($sp)
+				jal plot_line
+				lw $t5, 24($sp)
+				lw $t4, 20($sp)
+				lw $t3, 16($sp)
+				lw $t2, 12($sp)
+				lw $t1, 8($sp)
+				lw $t0, 4($sp)
+				lw $ra, 0($sp)
+				addi $sp, $sp, 28
+			
+		loop_u_1:	subiu $t4, $t4, 4		#seta o endereco da linha pra um acima
+				subiu $t5, $t5, 1		#seta o endereco do index pra um acima
+				j loop_u
+				
+		loop_u_end:	addiu $t0, $t0, 2		#compensa pela linha que sumiu
+				addiu $t2, $t2, 4		#compensa pela linha que sumiu		
+		
+loop_l_1:	subiu $t0, $t0, 1		#vai para o endereco do index anterior
+		subiu $t2, $t2, 4		#vai para o endereco da linha anterior
+		j loop_l
 		
 collision_end:	jr $ra
 
@@ -684,6 +766,116 @@ sai_plot0:	lw $a0, 0($sp)
 		addi $sp, $sp, 16
 		jr $ra
 		
+#################################################################################################
+######### A rotina abaixo plota uma linha da matriz de jogo. Recebe como argumento a 
+######### linha que vai ser plotada e o player.
+#################################################################################################												
+plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
+		sw $a3, 12($sp)
+		sw $a2, 8($sp)
+		sw $a1, 4($sp)
+		sw $a0, 0($sp)
+
+		sll $t0, $a0, 2
+		la $t9, LINE_0
+		add $t0, $t0, $t9	# endereco da linha a ser plotada
+		lw $t0, 0($t0)		# carrega a linha a ser plotada
+		
+		andi $t3, $s0, 0x00FF0000
+		srl $t3, $t3, 16
+		andi $t4, $s0, 0x000000FF
+		mult $t4, $a1
+		mflo $t4
+		add $t3, $t3, $t4
+		
+		addi $t4, $zero, SIDE	# calcula a posição da linha em y
+		mult $t4, $a0
+		mflo $t4
+		addi $a1, $t4, PAR_Y0
+		
+		move $t1, $zero		# inicializa o contador de pixels
+loop_line:	bge $t1, 70, end_line
+		andi $t2, $t0, 0x07
+		srl $t0, $t0, 3
+		
+		beq $t2, $zero, lcolor_black
+		beq $t2, 1, lcolor_red
+		beq $t2, 2, lcolor_blue
+		beq $t2, 3, lcolor_green
+		beq $t2, 4, lcolor_pink
+		beq $t2, 5, lcolor_orange
+		beq $t2, 6, lcolor_db
+		beq $t2, 7, lcolor_purple
+		
+lcolor_black:	li $a3, BLACK
+		j loop_plot_line
+
+lcolor_red:	li $a3, RED
+		j loop_plot_line
+
+lcolor_blue:	li $a3, BLUE
+		j loop_plot_line
+	
+lcolor_green:	li $a3, GREEN
+		j loop_plot_line
+		
+lcolor_pink:	li $a3, PINK
+		j loop_plot_line
+
+lcolor_db:	li $a3, DARK_BLUE
+		j loop_plot_line
+	
+lcolor_purple:	li $a3, PURPLE
+		j loop_plot_line
+		
+lcolor_orange:	li $a3, ORANGE
+		
+loop_plot_line:	addi $sp, $sp, -24		# Salva na pilha as variáveis que estão sendo utilizadas
+		sw $a0, 20($sp)
+		sw $ra, 16($sp)
+		sw $t0, 12($sp)
+		sw $t1, 8($sp)
+		sw $t2, 4($sp)
+		sw $t3, 0($sp)
+		add $a0, $t3, $t1
+		 
+		jal plot_square			# Plota quadrado 
+		
+		lw $t3, 0($sp)
+		lw $t2, 4($sp)			# Recupera as variáveis temporárias da pilha
+		lw $t1, 8($sp)
+		lw $t0, 12($sp)
+		lw $ra, 16($sp)
+		lw $a0, 20($sp)
+		addi $sp, $sp, 24
+		
+		addi $t1, $t1, SIDE
+		j loop_line
+			
+end_line:	lw $a0, 0($sp)
+		lw $a1, 4($sp)
+		lw $a2, 8($sp)
+		lw $a3, 12($sp)
+		addi $sp, $sp, 16
+
+		jr $ra
+		
+#################################################################################################
+######### A rotina abaixo plota uma matriz de jogo. Recebe como argumentos
+######### $a0 = endereco da linha inicial, $a1 = jogador (0 a 3), $a2 = endereco da linha final
+#################################################################################################	
+plot_matrix:	bgt $a0, $a2, fim_plot_mat
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal plot_line
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		
+		addi, $a0, $a0, 1
+		j plot_matrix
+		
+fim_plot_mat:	jr $ra
+
 #################################################################################################
 ######### A rotina abaixo plota um quadrado 7x7 pixels. Recebe como argumento  
 ######### a localização (x,y) e a cor.
