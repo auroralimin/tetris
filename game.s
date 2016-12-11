@@ -49,8 +49,10 @@ PAR_2P:	.word 0x003C5182	# 2 jogadores
 PAR_1P:	.word 0x007d92c3	# 1 jogador
 
 # Pontuações
-SCORE12: .word 0x00750000	# Jogador 1 (upper 2 bytes) e 2 (lower 2 bytes)
-SCORE34: .word 0x00000000	# Jogador 3 (upper 2 bytes) e 4 (lower 2 bytes) 
+SCORE1: .half 0x0
+SCORE2: .half 0x0
+SCORE3: .half 0x0
+SCORE4: .half 0x0
 
 # Label
 ARG_LABEL1: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
@@ -188,8 +190,8 @@ pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
 		li $a3, NUMX
 		jal show_initial	# Plota tela inicial de jogo
 		
-		lw $s6, SCORE12		# Carrega da memória as pontuações dos jogadores
-		lw $s5, SCORE34
+		lw $s6, SCORE1		# Carrega da memória as pontuações dos jogadores
+		lw $s5, SCORE2
 		andi $a0, $s6, 0xFFFF0000
 		srl $a0, $a0, 16
 		li $a1, 0
@@ -631,6 +633,10 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 		lw $ra, 0($sp)			#pega da pilha
 		addi $sp, $sp, 4
 		
+		lh $t5, SCORE1
+		addiu $t5, $t5, 100
+		sh $t5, SCORE1
+		
 		addiu $t4, $t2, 0		#copia o endereco da linha da matriz
 		addiu $t5, $t0, 0		#copia o index da linha da matriz
 		loop_u: 	bleu $t4, $t3, loop_u_end	#se ja percorreu a matriz toda, sai do loop
@@ -675,7 +681,15 @@ loop_l_1:	subiu $t0, $t0, 1		#vai para o endereco do index anterior
 		subiu $t2, $t2, 4		#vai para o endereco da linha anterior
 		j loop_l
 		
-collision_end:	jr $ra
+collision_end:	lh $a0, SCORE1
+		li $a1, 0
+		
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal write_score 
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		jr $ra
 
 #################################################################################################
 sys_time: 	li $v0, 30         		#seta o codigo do syscall para system time
