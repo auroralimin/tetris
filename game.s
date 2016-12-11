@@ -646,7 +646,7 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 				
 				subu $t7, $t4, $t3		#calcula as diferencas dos enderecos
 				div $a0, $t7, 4			#seta o argumento com a linha modificada
-				li $a1, 3			#seta o player
+				li $a1, 0			#seta o player
 				
 				addi $sp, $sp, -28
 				sw $ra, 0($sp)
@@ -702,9 +702,12 @@ rand7: 		li $v0, 30         		#seta o codigo do syscall para system time
 #################################################################################################
 ######### $a0 = x, $a1 = y, $a2 = tipo, $a3 = rotacao | positivo/negativo 
 #################################################################################################
-plot_piece: 	mul $a0, $a0, SIDE		#calcula a posicao x da peca considerando o tamanho do quadrado
+plot_piece: 	li $t0, SIDE
+		mult $a0, $t0			#calcula a posicao x da peca considerando o tamanho do quadrado
+		mflo $a0
 		addiu $a0, $a0, OFFSET_X1	#offset da peca x
-		mul $a1, $a1, SIDE		#calcula posicao y da peca considerando o tamanho do quadrado
+		mult $a1, $t0			#calcula posicao y da peca considerando o tamanho do quadrado
+		mflo $a1
 		addiu $a1, $a1, OFFSET_Y1	#adiciona offset de inicio da area de jogo
 
 		addi $sp, $sp, -20
@@ -841,9 +844,9 @@ plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
 		add $t0, $t0, $t9	# endereco da linha a ser plotada
 		lw $t0, 0($t0)		# carrega a linha a ser plotada
 		
-		andi $t3, $s0, 0x00FF0000
+		andi $t3, $s7, 0x00FF0000
 		srl $t3, $t3, 16
-		andi $t4, $s0, 0x000000FF
+		andi $t4, $s7, 0x000000FF
 		mult $t4, $a1
 		mflo $t4
 		add $t3, $t3, $t4
