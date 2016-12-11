@@ -41,6 +41,7 @@ Q0: .half 0xcc00, 0xcc00, 0xcc00, 0xcc00
 # Mensagens para display
 MSG0:.asciiz "Insira o numero de jogadores (1-4): "
 PTS: .asciiz "Score"
+GAME_OVER: .asciiz "GAME OVER"
 
 # Parametros dependentes do número de jogadores
 PAR_4P: .word 0x00081D4E	# 4 jogadores
@@ -200,6 +201,8 @@ pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
 
 game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		addiu $s1, $v0, 0		#coloca o tempo do sistema no registrador s1
+		
+		beq $s2,0xFFFFFFFF,continue_gl2#se esta no fim do jogo, vai pro fim do loop
 		
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
@@ -571,6 +574,7 @@ collision: 	addi $sp, $sp, -4
 		
 		addu $t3, $zero, $zero		#inicializa contador da peca
 
+		ble $a1, 1, game_end		#se a peca esta acima do teto da arena, vai para game_end
 		addi $a1, $a1, -2		#retira posicoes fantasma
 		
 		sll $t2, $a1, 2			#calcula offset da linha da matriz do jogo
@@ -695,6 +699,16 @@ collision_end:	lhu $a0, SCORE1
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		jr $ra
+
+game_end:	li $a0, 0
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal game_over
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		jr $ra
+		
+		li $s2, 0xFFFFFFFF
 
 #################################################################################################
 sys_time: 	li $v0, 30         		#seta o codigo do syscall para system time
@@ -1101,6 +1115,28 @@ passa_wscore:	lw $a0, 0($sp)
 		lw $a3, 12($sp)
 		addi $sp, $sp, 16
 		
+		
+		jr $ra
+
+
+#################################################################################################
+######### Plota game over
+#################################################################################################
+game_over:	andi $t0, $s7, 0x00FF0000
+		srl $t0, $t0, 16
+		andi $t1, $s0, 0x000000FF
+		mult $t1, $a0
+		mflo $t1
+		add $t0, $t0, $t1
+		addi, $t0, $t0, -1
+
+		la $a0, GAME_OVER
+		move $a1, $t0
+		addi $a2, $zero, PAR_Y0
+		addi $a2, $a2, 63
+		li $a3, 0x00FF
+		li $v0, 104
+		syscall
 		
 		jr $ra
 
