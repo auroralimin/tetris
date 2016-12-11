@@ -139,12 +139,11 @@ BEEP28: .byte 74 #D6
 BEEP29: .byte 72 #C6
 BEEP30: .byte 71 #B5
 BEEP31: .byte 71 #B5
-BEEP32: .byte 72 #C6
-BEEP33: .byte 74 #D6
-BEEP34: .byte 76 #E6
-BEEP35: .byte 72 #C6
+BEEP32: .byte 74 #D6
+BEEP33: .byte 76 #E6
+BEEP34: .byte 72 #C6
+BEEP35: .byte 69 #A5
 BEEP36: .byte 69 #A5
-BEEP37: .byte 69 #A5
 
 #Posição atual da musica
 MUSIC_POSITION: .word 0x0
@@ -639,7 +638,7 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)			#salva $ra na pilha
-		jal play_beep			#toca o beep
+		jal play_break_line		#toca o beep
 		lw $ra, 0($sp)			#pega da pilha
 		addi $sp, $sp, 4
 		
@@ -707,9 +706,10 @@ game_end:	li $a0, 0
 		jal game_over
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
-		jr $ra
 		
 		li $s2, 0xFFFFFFFF
+		
+		jr $ra
 
 #################################################################################################
 sys_time: 	li $v0, 30         		#seta o codigo do syscall para system time
@@ -1145,6 +1145,12 @@ game_over:	andi $t0, $s7, 0x00FF0000
 		li $v0, 104
 		syscall
 		
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal play_lost_game
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
+		
 		jr $ra
 
 #################################################################################################
@@ -1168,7 +1174,7 @@ play_music:	li $v0,31 #syscall 31 - assíncrono
 		la $a0,BEEP + 0($t0)
 		lbu $a0,0($a0)
 		syscall #beep
-		beq $t0,37,reset_music #37 notas
+		beq $t0,36,reset_music #36 notas
 		addi $t0,$t0,1 #pula pro proximo beep
 
 		sw $t0, MUSIC_POSITION
@@ -1181,7 +1187,7 @@ reset_music:	sw $zero, MUSIC_POSITION #volta musica pro beep 0
 #################################################################################################
 ######### Toca um beep quando uma linha é fechada
 #################################################################################################
-play_beep:      #syscall 33 - síncrono
+play_break_line:#syscall 33 - síncrono
 	        li $v0,33
 
 		#duracao
@@ -1201,6 +1207,46 @@ play_beep:      #syscall 33 - síncrono
 		syscall #beep
 
 		la $a0, 60
+		lbu $a0, 0($a0)
+		syscall #beep
+	
+		jr $ra
+
+#################################################################################################
+######### Toca um beep quando alguém perde
+#################################################################################################
+play_lost_game:#syscall 33 - síncrono
+	        li $v0,33
+
+		#duracao
+		la $a1, DURATION
+		lbu $a1,1($a1)
+
+		#Instrumento
+		la $a2,1
+		lbu $a2,0($a2)
+
+		#volume
+		la $a3, VOLUME
+		lbu $a3,0($a3)
+
+		la $a0, 48
+		lbu $a0,0($a0)
+		syscall #beep
+
+		la $a0, 43
+		lbu $a0, 0($a0)
+		syscall #beep
+		
+		la $a0, 40
+		lbu $a0, 0($a0)
+		syscall #beep
+		
+		la $a0, 43
+		lbu $a0, 0($a0)
+		syscall #beep
+		
+		la $a0, 36
 		lbu $a0, 0($a0)
 		syscall #beep
 	
