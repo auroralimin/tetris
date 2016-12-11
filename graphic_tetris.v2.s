@@ -14,10 +14,10 @@
 .eqv BLACK 0x00
 .eqv DARK_RED 0x03
 .eqv RED 0x0F
-.eqv ORANGE 0x2F
+.eqv ORANGE 0x1F
 .eqv GREEN 0x30
-.eqv YELLOW 0x37
-.eqv DARK_BLUE 0x88
+.eqv YELLOW 0x3F
+.eqv DARK_BLUE 0x8A
 .eqv PINK 0x86
 .eqv BLUE 0xF0
 .eqv WHITE 0xFF
@@ -121,106 +121,106 @@ pass_main:	lw $s0, 0($t0)		# Carrega parâmetros da memória
 		li $a1, PAR_Y0
 		li $a2, 0
 		li $a3, 0
-		#jal plot		# Plota a peça L em todas as rotações
+		jal plot		# Plota a peça L em todas as rotações
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 43		# Plota a peça J em todas as rotações
 		li $a1, PAR_Y0
 		li $a2, 2
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 43		# Plota a peça I em todas as rotações
 		li $a1, 80
 		li $a2, 1
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 15		# Plota a peça T em todas as rotações
 		li $a1, 110
 		li $a2, 3
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 15		# Plota a peça S em todas as rotações
 		li $a1, 140
 		li $a2, 4
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 43		# Plota a peça Z em todas as rotações
 		li $a1, 140
 		li $a2, 5
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 43		# Plota a peça Q em todas as rotações
 		li $a1, 170
 		li $a2, 0xE
 		li $a3, 0
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		addi $a0, $a0, 78
 		addi $a3, $a3, 1
-		#jal plot
+		jal plot
 		
 		li $a0, 2
 		li $a1, 0
