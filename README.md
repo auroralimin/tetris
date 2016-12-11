@@ -14,7 +14,7 @@ The game should be fully working in the *[Altera DE2-70 board][DE2-70]*.
 ## Software requirements:
 * A fully functioning Tetris game based on the original Tetris game
 
-* Multiplayer optios (1-4 players)
+* Multiplayer options (1-4 players)
 
 The game should be correctely simulated in the *[Mars][MARS]* application.
 
