@@ -19,7 +19,7 @@
 .eqv DARK_BLUE 0x89
 .eqv CYAN 0xF0
 .eqv WHITE 0xFF
-.eqv PURPLE 0xCC #0x86
+.eqv PURPLE 0xDB #0x86
 
 # Pecas iniciais
 .eqv INIT_PIECE 0x600
@@ -156,7 +156,8 @@ DURATION: .byte 255
 VOLUME: .byte 127
 
 .text
-MAIN:		la $a0, MSG0		# Pergunta quantidade de jogadores
+MAIN:		move $s3, $zero
+		la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
 		li $a2, 3
 		li $a3, 0xFF00
@@ -733,11 +734,17 @@ rand7: 		li $v0, 30         		#seta o codigo do syscall para system time
 #################################################################################################
 ######### $a0 = x, $a1 = y, $a2 = tipo, $a3 = rotacao | positivo/negativo 
 #################################################################################################
-plot_piece: 	li $t0, SIDE
-		mult $a0, $t0			#calcula a posicao x da peca considerando o tamanho do quadrado
+plot_piece: 	li $t1, SIDE
+		mult $a0, $t1			#calcula a posicao x da peca considerando o tamanho do quadrado
 		mflo $a0
-		addiu $a0, $a0, OFFSET_X1	#offset da peca x
-		mult $a1, $t0			#calcula posicao y da peca considerando o tamanho do quadrado
+		andi $t0, $s7, 0x00FF0000
+		srl $t0, $t0, 16		#offset da peca x
+		add $a0, $a0, $t0
+		andi $t0, $s7, 0x000000FF
+		mult $t0, $s3
+		mflo $t0
+		add $a0, $a0, $t0
+		mult $a1, $t1			#calcula posicao y da peca considerando o tamanho do quadrado
 		mflo $a1
 		addiu $a1, $a1, OFFSET_Y1	#adiciona offset de inicio da area de jogo
 
@@ -878,7 +885,7 @@ plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
 		andi $t3, $s7, 0x00FF0000
 		srl $t3, $t3, 16
 		andi $t4, $s7, 0x000000FF
-		mult $t4, $a1
+		mult $t4, $s3
 		mflo $t4
 		add $t3, $t3, $t4
 		
@@ -1098,7 +1105,7 @@ write_score:	addi $sp, $sp, -16		# salva os argumentos na pilha
 		sub $t0, $t1, $t2		# limite_x = 320 - inicio_area_jogo_x
 
 		andi $t3, $s7, 0x000000FF	# shift_x
-		mult $a1, $t3
+		mult $s3, $t3
 		mflo $t3			# shift_x * nro_jogadores
 		add $t2, $t2, $t3		# pos_x = inicio_x + shift_x * nro_jogadores + 3 * lado_quadrado
 		addi $t2, $t2, SIDE
@@ -1125,7 +1132,7 @@ passa_wscore:	lw $a0, 0($sp)
 game_over:	andi $t0, $s7, 0x00FF0000
 		srl $t0, $t0, 16
 		andi $t1, $s0, 0x000000FF
-		mult $t1, $a0
+		mult $t1, $s3
 		mflo $t1
 		add $t0, $t0, $t1
 		addi, $t0, $t0, -1
