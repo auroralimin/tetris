@@ -29,6 +29,18 @@
 .eqv OFFSET_Y1 29
 
 .data
+# Pecas moveis
+PIECE_1: .half 0x0
+PIECE_2: .half 0x0
+PIECE_3: .half 0x0
+PIECE_4: .half 0x0
+
+# Acumuladores de tempo
+TIME_1: .word 0x0
+TIME_2: .word 0x0
+TIME_3: .word 0x0
+TIME_4: .word 0x0
+
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
 L0: .half 0x2e00, 0x88c0, 0xe800, 0xc440
 I0: .half 0xf000, 0x8888, 0xf000, 0x8888
@@ -44,10 +56,10 @@ PTS: .asciiz "Score"
 GAME_OVER: .asciiz "GAME OVER"
 
 # Parametros dependentes do número de jogadores
-PAR_4P: .word 0x00081D4E	# 4 jogadores
-PAR_3P:	.word 0x001c3162	# 3 jogadores
-PAR_2P:	.word 0x003C5182	# 2 jogadores
-PAR_1P:	.word 0x007d92c3	# 1 jogador
+PAR_4P: .word 0x04081D4E	# 4 jogadores
+PAR_3P:	.word 0x031c3162	# 3 jogadores
+PAR_2P:	.word 0x023C5182	# 2 jogadores
+PAR_1P:	.word 0x017d92c3	# 1 jogador
 
 # Pontuações
 SCORE1: .half 0x0
@@ -191,25 +203,35 @@ pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
 		li $a3, NUMX
 		jal show_initial	# Plota tela inicial de jogo
 		
-		lw $s6, SCORE1		# Carrega da memória as pontuações dos jogadores
-		lw $s5, SCORE2
 		andi $a0, $s6, 0xFFFF0000
 		srl $a0, $a0, 16
 		li $a1, 0
-		jal write_score		# Escreve a pontuação do jogador 1
-
+		
+		jal sys_time			#pega o tempo do sistema em ms
+		add $s0, $zero, $v0		#seta o acumulador de tempo
+		add $s4, $zero, $v0		#seta o acumulador de tempo
 
 game_loop:	jal sys_time			#pega o tempo do sistema em ms
-		addiu $s1, $v0, 0		#coloca o tempo do sistema no registrador s1
+		add $s1, $zero, $v0		#seta o acumulador de tempo
 		
-		beq $s2,0xFFFFFFFF,continue_gl2#se esta no fim do jogo, vai pro fim do loop
+		la $t0, PIECE_1			#carrega o endereco da primeira peca movel
+		sll $t1, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco da peca movel
+		lhu $s2, 0($t0)			#carrega a peca movel no registrador s2
+		
+		la $t0, TIME_1			#carrega o endereco do  primeiro timer
+		sll $t1, $s3, 2			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco do timer
+		lw $s0, 0($t0)			#carrega o timer no registrador s0
+
+		beq $s2,0xFFFF,continue_gl4 #se esta no fim do jogo, vai pro fim do loop
 		
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
 		li $s2, INIT_PIECE		#inicializa uma nova peca
 		addiu $s2, $s2, 1
 		addu $s2, $s2, $v0		#seta o tipo da peca
-		li $s0, 501			#acumula tempo suficiente pra ciclo
+		li $s0, 0			#acumula tempo suficiente pra ciclo
 
 continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		beq $v0, 0, continue_gl1	#se nao teve input, continua o loop
@@ -217,28 +239,47 @@ continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		add $a0, $v0, $zero		#seta o codigo da tecla pressionada como argumento
 		jal input 			#senao, trata input
 		
-continue_gl1:	ble $s0, 300,continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
-		addu $s0, $zero, $zero		#reseta o acumulador de tempo
-		la $t0, update_down		#seta label a ser usada como argumento
+continue_gl1:	subu $t0, $s1, $s4		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, 400, continue_gl2	#checa se há tempo acumulado suficiente para tocar o beep da musica
+		jal play_music			#toca um beep da musica
+		add $s4, $zero, $s1		#seta o acumulador de tempo
+		
+continue_gl2:	subu $t0, $s1, $s0		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, 400, continue_gl4	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
+		add $s0, $zero, $s1		#seta o acumulador de tempo
+		srl $t0, $s7, 24		#coloca quantos jogadores sao no total em t0
+		addiu $t1, $s3, 1		#incrementa o jogador
+		blt $t1, $t0, continue_gl3	#se o jogador e' valido, continua o loop sem resetar o acumulador de tempo
+		
+continue_gl3:	la $t0, update_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL1		#salva o valor do endereco da label no endereco ARG_LABEL1
 		la $t0, after_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL2		#salva o valor do endereco da label no endereco ARG_LABEL2
 		la $t0, reset_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL3		#salva o valor do endereco da label no endereco ARG_LABEL3
 		
-		jal play_music			#toca um beep da musica
 		jal cycle
 	
-		beqz $v0, continue_gl2		#se nao houver colisao, vai para continue_gl2
+		beqz $v0, continue_gl4		#se nao houver colisao, vai para continue_gl2
 		
 		jal collision
+
+continue_gl4:	la $t0, PIECE_1			#carrega o endereco da primeira peca movel
+		sll $t1, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco da peca movel
+		sh $s2, 0($t0)			#salva na memoria a peca movel
 		
+		la $t0, TIME_1			#carrega o endereco do  primeiro timer
+		sll $t1, $s3, 2			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco do timer
+		sw $s0, 0($t0)			#salva o timer
+		
+		srl $t0, $s7, 24		#coloca quantos jogadores sao no total em t0
+		addiu $s3, $s3, 1		#incrementa o jogador
+		blt $s3, $t0, continue_gl5	#se o jogador e' valido, continua o loop sem resetar jogador
+		add $s3, $zero, $zero
 
-
-continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
-		subu $t0, $v0, $s1		#calcula o tempo que o ciclo demorou
-		addu $s0, $s0, $t0		#incrementa o acumulador de tempo
-		j game_loop			#volta para o inicio do loop
+continue_gl5: j game_loop
 
 #################################################################################################
 keyboard:	la $t1,0xFF100000
@@ -1064,6 +1105,8 @@ sai0:		li $a2, PAR_Y0			# pos_y = inicio_area_jogo_y + altura_area_jogo + lado_q
 		srl $t1, $t1, 16
 		addi $t1, $t1, SIDE
 		addi $t1, $t1, SIDE
+		
+		add $s3, $zero, $zero
 loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
 		la $a0, PTS			# carrega string 'Score'
 		move $a1, $t1			# plota string
@@ -1072,9 +1115,27 @@ loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
 		syscall
 		andi $t3, $s7, 0x000000FF	# x = x + shift_x
 		add $t1, $t1, $t3
+		
+		addi $sp, $sp, -20
+		sw $ra, 16($sp)
+		sw $a0, 12($sp)
+		sw $a1, 8($sp)
+		sw $t0, 4($sp)
+		sw $t1, 0($sp)
+		add $a0, $zero, $zero
+		jal write_score			#plota o negativo da peca antiga (para apagar os vestigios dela)
+		lw $t1, 0($sp)
+		lw $t0, 4($sp)
+		lw $a1, 8($sp)
+		lw $a0, 12($sp)
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
+		
+		addiu $s3, $s3, 1
 		j loop_score
 		
-sai_score:	lw $a0, 0($sp)
+sai_score:	add $s3, $zero, $zero
+		lw $a0, 0($sp)
 		lw $a1, 4($sp)
 		lw $a2, 8($sp)
 		lw $a3, 12($sp)
@@ -1131,7 +1192,7 @@ passa_wscore:	lw $a0, 0($sp)
 #################################################################################################
 game_over:	andi $t0, $s7, 0x00FF0000
 		srl $t0, $t0, 16
-		andi $t1, $s0, 0x000000FF
+		andi $t1, $s7, 0x000000FF
 		mult $t1, $s3
 		mflo $t1
 		add $t0, $t0, $t1
