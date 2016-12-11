@@ -36,6 +36,7 @@ Q0: .half 0xcc00, 0xcc00, 0xcc00, 0xcc00
 # Mensagens para display
 MSG0:.asciiz "Insira o numero de jogadores (1-4): "
 PTS: .asciiz "Score"
+GAME_OVER: .asciiz "GAME OVER"
 
 # Parametros dependentes do número de jogadores
 PAR_4P: .word 0x00081D4E	# 4 jogadores
@@ -225,6 +226,9 @@ pass_main:	lw $s0, 0($t0)		# Carrega parâmetros da memória
 		li $a1, 0
 		li $a2, 3
 		jal plot_matrix
+		
+		li $a0, 0
+		jal game_over
 		
 		li $v0, 10
 		syscall
@@ -475,62 +479,6 @@ passa_wscore:	lw $a0, 0($sp)
 		addi $sp, $sp, 16
 		
 		jr $ra
-		
-#################################################################################################
-######### A rotina abaixo plota uma linha da matriz de jogo. Recebe como argumento o end da 
-######### linha que vai ser plotada.
-#################################################################################################												
-plot_line_black:addi $sp, $sp, -16	# Salva os argumentos na pilha
-		sw $a3, 12($sp)
-		sw $a2, 8($sp)
-		sw $a1, 4($sp)
-		sw $a0, 0($sp)
-
-		addi $t4, $zero, SIDE	# calcula a posição da linha em y
-		mult $t4, $a0
-		mflo $t4
-		addi $a1, $t4, PAR_Y0
-		
-		andi $t3, $s0, 0x00FF0000
-		srl $t3, $t3, 16
-		andi $t4, $s0, 0x000000FF
-		mult $t4, $a1
-		mflo $t4
-		add $t3, $t3, $t4
-
-		li $a3, 0x00
-		move $t1, $zero		# inicializa o contador de quadrados
-loop_line_black:bge $t1, 70, end_line_black
-		addi $sp, $sp, -24		# Salva na pilha as variáveis que estão sendo utilizadas
-		sw $a0, 20($sp)
-		sw $ra, 16($sp)
-		sw $t0, 12($sp)
-		sw $t1, 8($sp)
-		sw $t2, 4($sp)
-		sw $t3, 0($sp)
-		add $a0, $t3, $t1
-		 
-		jal plot_square			# Plota quadrado 
-		
-		lw $t3, 0($sp)
-		lw $t2, 4($sp)			# Recupera as variáveis temporárias da pilha
-		lw $t1, 8($sp)
-		lw $t0, 12($sp)
-		lw $ra, 16($sp)
-		lw $a0, 20($sp)
-		addi $sp, $sp, 24
-		
-		addi $t1, $t1, SIDE
-		j loop_line_black
-			
-end_line_black:	lw $a0, 0($sp)
-		lw $a1, 4($sp)
-		lw $a2, 8($sp)
-		lw $a3, 12($sp)
-		addi $sp, $sp, 16
-
-		jr $ra
-		
 			
 #################################################################################################
 ######### A rotina abaixo plota uma linha da matriz de jogo. Recebe como argumento a 
@@ -627,8 +575,8 @@ end_line:	lw $a0, 0($sp)
 		jr $ra
 		
 #################################################################################################
-######### A rotina abaixo plota uma matriz de jogo. Recebe como argumento a partir de qual 
-######### linha e quantas linhas vo ser plotadas.
+######### A rotina abaixo plota uma matriz de jogo. Recebe como argumento a primeira e a ultima 
+######### linha a serem plotadas.
 #################################################################################################	
 plot_matrix:	bgt $a0, $a2, fim_plot_mat
 		addi $sp, $sp, -4
@@ -641,3 +589,24 @@ plot_matrix:	bgt $a0, $a2, fim_plot_mat
 		j plot_matrix
 		
 fim_plot_mat:	jr $ra
+
+#################################################################################################
+######### Plota game over
+#################################################################################################
+game_over:	andi $t0, $s0, 0x00FF0000
+		srl $t0, $t0, 16
+		andi $t1, $s0, 0x000000FF
+		mult $t1, $a0
+		mflo $t1
+		add $t0, $t0, $t1
+		addi, $t0, $t0, -1
+
+		la $a0, GAME_OVER
+		move $a1, $t0
+		addi $a2, $zero, PAR_Y0
+		addi $a2, $a2, 63
+		li $a3, 0x00FF
+		li $v0, 104
+		syscall
+		
+		jr $ra
