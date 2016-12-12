@@ -37,6 +37,12 @@ PIECE_2: .half 0x0
 PIECE_3: .half 0x0
 PIECE_4: .half 0x0
 
+# Previsao de pecas moveis
+P_PIECE_1: .half 0x0
+P_PIECE_2: .half 0x0
+P_PIECE_3: .half 0x0
+P_PIECE_4: .half 0x0
+
 # Inputs
 INPUT_1: .word 0x0
 INPUT_2: .word 0x0
@@ -361,20 +367,32 @@ P2:		la $t0, PAR_2P
 		
 P1:		la $t0, PAR_1P
 		
-pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
+pass_main:	lw $s7, 0($t0)			# Carrega parâmetros da memória
 		andi $a0, $s7, 0x00FF0000
 		srl $a0, $a0, 16
 		andi $a1, $s7, 0x0000FF00
 		srl $a1, $a1, 8
 		andi $a2, $s7, 0x000000FF
 		li $a3, NUMX
-		jal show_initial	# Plota tela inicial de jogo
+		jal show_initial		# Plota tela inicial de jogo
 		
 		andi $a0, $s6, 0xFFFF0000
 		srl $a0, $a0, 16
 		li $a1, 0
+
+		li $t0, 0			#contador das pecas
+		la $t2, P_PIECE_1		#endereco do inicio da preview
+		srl $t3, $s7, 24		#coloca quantos jogadores sao no total em t0
+preview:	bge $t0, $t3, set_timers	#testa se ja setou todas as previews
+		jal rand7			#randomiza o tipo da peca	
+		li $t1, INIT_PIECE		#inicializa uma nova peca
+		addu $t1, $t1, $v0		#seta o tipo da peca
+		sh $t1, 0($t2)
+		addiu $t0, $t0, 1
+		addiu $t2, $t2, 2
+		j preview
 		
-		jal sys_time			#pega o tempo do sistema em ms
+set_timers:	jal sys_time			#pega o tempo do sistema em ms
 		add $s0, $zero, $v0		#seta o acumulador de tempo
 		add $s4, $zero, $v0		#seta o acumulador de tempo
 
@@ -391,13 +409,35 @@ game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		addu $t0, $t0, $t1		#calcula o endereco do timer
 		lw $s0, 0($t0)			#carrega o timer no registrador s0
 
-		beq $s2,0xFFFF,continue_gl4 #se esta no fim do jogo, vai pro fim do loop
+		beq $s2,0xFFFF,continue_gl4 	#se esta no fim do jogo, vai pro fim do loop
 		
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
+		
 		jal rand7			#se sim, randomiza o tipo da peca	
-		li $s2, INIT_PIECE		#inicializa uma nova peca
-		addiu $s2, $s2, 1
-		addu $s2, $s2, $v0		#seta o tipo da peca
+		li $t3, INIT_PIECE		#inicializa uma nova peca previa
+		addu $t3, $t3, $v0		#seta o tipo da peca
+		
+		la $t0, P_PIECE_1		#carrega o endereco da primeira peca movel previa
+		sll $t1, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco da peca movel
+		lhu $s2, 0($t0)			#carrega a peca movel no registrador s2
+		sh $t3, 0($t0)			#salva a nova peca na memoria
+	
+		sll $a2, $t3, 29		#isola tipo
+		srl $a2, $a2, 29		#isola tipo
+		srl $a3, $t3, 14		#isola a rotacao
+		sll $a3, $a3, 1			#isola a rotacao
+		addi $a3, $a3, 1		#seta o plot como positivo
+		
+		li $a2, 3
+		li $a3, 1
+		jal plot_prox
+		
+		la $t1, PIECE_1			#carrega o endereco da primeira peca movel
+		sll $t2, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t1, $t1, $t2		#calcula o endereco da peca movel
+		sh $s2, 0($t1)
+		
 		li $s0, 0			#acumula tempo suficiente pra ciclo
 
 continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
@@ -1076,9 +1116,8 @@ rand7: 		li $v0, 30         		#seta o codigo do syscall para system time
 		sll $a0, $a0, 29		#isola os 3 bits menos significativos
 		srl $a0, $a0, 29		#isola os 3 bits menos significativos
 
-		li $t0, 6			#da load no numero 8
-		bge $a0, $t0, rand7		#checa se o numero aleatorio gerado é maior que 6, se sim gera o nome de novo
-		addiu $v0, $a0, 1		#coloca o numero gerado no registrador v0 acrescido de 1
+		beqz $a0, rand7			#checa se o numero aleatorio gerado é diferente de 0
+		addiu $v0, $a0, 0		#coloca o numero gerado no registrador v0 acrescido de 1
 		jr $ra
 		
 #################################################################################################
@@ -1379,6 +1418,7 @@ plot_prox:	andi $t0, $s7, 0x000000FF
 		sw $ra, 0($sp)
 		jal plot
 		lw $ra, 0($sp)
+		addi $sp, $sp, 4
 		jr $ra
 
 #################################################################################################
