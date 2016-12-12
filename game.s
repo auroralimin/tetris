@@ -171,6 +171,9 @@ LINE_4_17: .word 0x0
 LINE_4_18: .word 0x0
 LINE_4_19: .word 0x0
 
+# Contador de linhas consumidas
+CONSUMED: .byte 0x0
+
 # Contadores das matrizes do jogo
 I_1_0:  .byte 0x0
 I_1_1:  .byte 0x0
@@ -915,23 +918,20 @@ end_loop_save:
 		la $t3, LINE_1_0		#carrega o endereco da primeira linha da matriz
 		addu $t3, $t3, $t9		#soma endereco ao offset
 						
-loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda, sai do loop
+		
+loop_l:		blt $t0, $t1, collision_1	#se ja percorreu os indices da matriz toda, sai do loop
 		lbu $t4, 0($t0)			#carrega o index
 
 		bne $t4, 10, loop_l_1		#se a linha nao esta completa, continua sem modificar
+		lbu $t6, CONSUMED
+		addi $t6, $t6, 1		#incrementa contador de linhas consumidas
+		sb $t6, CONSUMED
 
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)			#salva $ra na pilha
 		jal play_break_line		#toca o beep
 		lw $ra, 0($sp)			#pega da pilha
 		addi $sp, $sp, 4
-		
-		la $t8, SCORE1			#carrega o endereco do score na memoria
-		sll $t9, $s3, 1			#calcula o offset do score
-		addu $t8, $t8, $t9		#soma o endereco do score com o offset
-		lhu $t5, 0($t8)
-		addiu $t5, $t5, 100
-		sh $t5, 0($t8)
 		
 		addiu $t4, $t2, 0		#copia o endereco da linha da matriz
 		addiu $t5, $t0, 0		#copia o index da linha da matriz
@@ -941,7 +941,7 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 			
 				lw $t6, -4($t4)			#carrega linha a ser copiada
 				sw $t6, 0($t4)			#atualiza linha atual	
-				lbu $t6, -1($t5)			#carrega index a ser copiado
+				lbu $t6, -1($t5)		#carrega index a ser copiado
 				sb $t6, 0($t5)			#atualiza index atual
 				
 				subu $t7, $t4, $t3		#calcula as diferencas dos enderecos
@@ -977,18 +977,36 @@ loop_l_1:	addi $t0, $t0, -1		#vai para o endereco do index anterior
 		addi $t2, $t2, -4		#vai para o endereco da linha anterior
 		j loop_l
 		
-collision_end:	la $t8, SCORE1			#carrega o endereco do score na memoria
+collision_1:	la $t8, SCORE1			#carrega o endereco do score na memoria
 		sll $t9, $s3, 1			#calcula o offset do score
 		addu $t8, $t8, $t9		#soma o endereco do score com o offset
-		lhu $a0, 0($t8)			#carrega score
-		li $a1, 0
+		lhu $a0, 0($t8)
+		
+		lbu $t0, CONSUMED
+		beqz $t0, collision_end		#se nenhuma linha foi consumida, a pontuacao nao muda
+		beq $t0, 1, collision_l_1	#se uma linha foi consumida, vai para collision_l_1
+		beq $t0, 2, collision_l_2	#se duas linhas foram consumidas, vai para collision_l_2
+		beq $t0, 3, collision_l_3	#se três linhas foram consumidas, vai para collision_l_3
+		beq $t0, 4, collision_l_4	#se quatro linhas foram consumidas, vai para collision_l_4
+
+collision_l_1:	addiu $a0, $a0, 40
+		j collision_score	
+collision_l_2:	addiu $a0, $a0, 100
+		j collision_score
+collision_l_3:	addiu $a0, $a0, 300
+		j collision_score
+collision_l_4:	addiu $a0, $a0, 1200
+		j collision_score
+collision_score:sh $a0, 0($t8)
+		sb $zero, CONSUMED
 		
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)
 		jal write_score 
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
-		jr $ra
+		
+collision_end:	jr $ra
 
 game_end:	li $a0, 0
 		addi $sp, $sp, -4
@@ -1399,8 +1417,7 @@ sai_score:	add $s3, $zero, $zero
 		jr $ra
 		
 #################################################################################################
-######### Atualiza a pontuação de um jogador. Recebe como argumento em $a0 a pontuação e em
-######### $a1 o código do jogador.
+######### Atualiza a pontuação de um jogador. Recebe como argumento em $a0 a pontuação
 #################################################################################################		
 write_score:	addi $sp, $sp, -16		# salva os argumentos na pilha 
 		sw $a3, 12($sp)
