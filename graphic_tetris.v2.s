@@ -22,6 +22,8 @@
 .eqv PURPLE 0xCC #0x87
 
 .data
+FILE: .asciiz "a.bin"
+
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
 L0: .half 0x2e00, 0x88c0, 0xe800, 0xc440
 I0: .half 0xf000, 0x8888, 0xf000, 0x8888
@@ -37,10 +39,10 @@ PTS: .asciiz "Score"
 GAME_OVER: .asciiz "GAME OVER"
 
 # Parametros dependentes do número de jogadores
-PAR_4P: .word 0x00081D4E	# 4 jogadores
-PAR_3P:	.word 0x001c3162	# 3 jogadores
-PAR_2P:	.word 0x003C5182	# 2 jogadores
-PAR_1P:	.word 0x007d92c3	# 1 jogador
+PAR_4P: .word 0x04081D4E	# 4 jogadores
+PAR_3P:	.word 0x031c3162	# 3 jogadores
+PAR_2P:	.word 0x023C5182	# 2 jogadores
+PAR_1P:	.word 0x017d92c3	# 1 jogador
 
 # Matriz do jogo
 LINE_0:  .word 0x000058D1
@@ -69,7 +71,26 @@ SCORE12: .word 0x00750000	# Jogador 1 (upper 2 bytes) e 2 (lower 2 bytes)
 SCORE34: .word 0x00000000	# Jogador 3 (upper 2 bytes) e 4 (lower 2 bytes) 
 	  
 .text
-MAIN:		la $a0, MSG0		# Pergunta quantidade de jogadores
+MAIN:		# Abre o arquivo
+		la $a0,FILE
+		li $a1,0
+		li $a2,0
+		li $v0,13
+		syscall
+
+		# Le o arquivos para a memoria VGA
+		move $a0,$v0
+		la $a1,0xFF000000
+		li $a2,76800
+		li $v0,14
+		syscall
+
+		#Fecha o arquivo
+		move $a0,$s1
+		li $v0,16
+		syscall
+
+		la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
 		li $a2, 3
 		li $a3, 0xFF00
@@ -434,6 +455,58 @@ sai_score:	lw $a0, 0($sp)
 		lw $ra, 16($sp)
 		addi $sp, $sp, 20
 		
+############################################### Plota espaço para a próxima peça
+		move $t3, $zero			# Inicializa fim_plot_x
+		li $a3, BLACK			# Cor do fundo
+		move $t0, $a0			# x_inicial = início da área de jogo em x
+		andi $t7, $s0, 0x000000FF	# offset
+		andi $t8, $s0, 0xFF000000
+		srl $t8, $t8, 24		# número de jogadores
+		move $t2, $a0			# início da área de jogo em x
+		
+		move $t6, $zero
+		addi $t2, $t2, 21
+loop00:		beq $t6, $t8, sai00
+		move $t0, $t2
+		addi $t3, $t2, 28		# fim_plot_x = x_inicial + largura_area_jogo 
+loop01:		bgt $t0, $t3, sai01		# se x >= fim_plot_x, sai
+		li $t1, 15			# y_inicial = inicio da area de jogo em y
+		li $t5, 43			# fim_plot_y = y_inicial + altura da área de jogo
+loop02:		bge $t1, $t5, sai02		# se y >= fim_plot_y, sai
+		mult $t1, $t9 			# y*320
+		mflo $t4
+		add $t4, $t4, $t0		# y*320 + x
+		addi $t4, $t4, VGA		# endereço inicial + offset calculado
+		sb $a3, 0($t4)			# plota um pixel na tela
+		addi $t1, $t1, 1		# incrementa o contador
+		j loop02
+		
+sai02:		addi $t0, $t0, 1		# incrementa x 
+		j loop01
+		
+sai01:		add $t2, $t2, $t7		# x_inicial da próxima área de jogo
+		addi $t6, $t6, 1
+		j loop00
+		
+sai00:		jr $ra
+
+#################################################################################################
+######### A rotina abaixo plota a prima peça que vai descer. Recebe en $a2 e $a3 o tipo da
+######### peça e a rotação.
+#################################################################################################
+
+plot_prox:	andi $t0, $s0, 0x000000FF
+		andi $t1, $s0, 0x00FF0000
+		srl $t1, $t1, 16
+		mult $t0, $s3
+		mflo $t0
+		add $a0, $t0, $t1
+		add $a0, $a0, 21
+		li $a1, 15
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal plot
+		lw $ra, 0($sp)
 		jr $ra
 		
 #################################################################################################
@@ -608,3 +681,6 @@ game_over:	andi $t0, $s0, 0x00FF0000
 		syscall
 		
 		jr $ra
+		
+		
+plot_next_piece: 
