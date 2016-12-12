@@ -72,51 +72,188 @@ ARG_LABEL1: .word 0x0		# Argumento que vai conter a label para possiveis jumps i
 ARG_LABEL2: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 ARG_LABEL3: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 
-# Matriz do jogo
-PRE_2:	 .word 0x0
-PRE_1:   .word 0x0
-LINE_0:  .word 0x0
-LINE_1:  .word 0x0
-LINE_2:  .word 0x0
-LINE_3:  .word 0x0
-LINE_4:  .word 0x0
-LINE_5:  .word 0x0
-LINE_6:  .word 0x0
-LINE_7:  .word 0x0
-LINE_8:  .word 0x0
-LINE_9:  .word 0x0
-LINE_10: .word 0x0
-LINE_11: .word 0x0
-LINE_12: .word 0x0
-LINE_13: .word 0x0
-LINE_14: .word 0x0
-LINE_15: .word 0x0
-LINE_16: .word 0x0
-LINE_17: .word 0x0
-LINE_18: .word 0x0
-LINE_19: .word 0x0
+# Matrizes do jogo
+PRE_1_2:   .word 0x0
+PRE_1_1:   .word 0x0
+LINE_1_0:  .word 0x0
+LINE_1_1:  .word 0x0
+LINE_1_2:  .word 0x0
+LINE_1_3:  .word 0x0
+LINE_1_4:  .word 0x0
+LINE_1_5:  .word 0x0
+LINE_1_6:  .word 0x0
+LINE_1_7:  .word 0x0
+LINE_1_8:  .word 0x0
+LINE_1_9:  .word 0x0
+LINE_1_10: .word 0x0
+LINE_1_11: .word 0x0
+LINE_1_12: .word 0x0
+LINE_1_13: .word 0x0
+LINE_1_14: .word 0x0
+LINE_1_15: .word 0x0
+LINE_1_16: .word 0x0
+LINE_1_17: .word 0x0
+LINE_1_18: .word 0x0
+LINE_1_19: .word 0x0
 
-# Contadores da matriz do jogo
-I_0:  .byte 0x0
-I_1:  .byte 0x0
-I_2:  .byte 0x0
-I_3:  .byte 0x0
-I_4:  .byte 0x0
-I_5:  .byte 0x0
-I_6:  .byte 0x0
-I_7:  .byte 0x0
-I_8:  .byte 0x0
-I_9:  .byte 0x0
-I_10: .byte 0x0
-I_11: .byte 0x0
-I_12: .byte 0x0
-I_13: .byte 0x0
-I_14: .byte 0x0
-I_15: .byte 0x0
-I_16: .byte 0x0
-I_17: .byte 0x0
-I_18: .byte 0x0
-I_19: .byte 0x0
+PRE_2_2:   .word 0x0
+PRE_2_1:   .word 0x0
+LINE_2_0:  .word 0x0
+LINE_2_1:  .word 0x0
+LINE_2_2:  .word 0x0
+LINE_2_3:  .word 0x0
+LINE_2_4:  .word 0x0
+LINE_2_5:  .word 0x0
+LINE_2_6:  .word 0x0
+LINE_2_7:  .word 0x0
+LINE_2_8:  .word 0x0
+LINE_2_9:  .word 0x0
+LINE_2_10: .word 0x0
+LINE_2_11: .word 0x0
+LINE_2_12: .word 0x0
+LINE_2_13: .word 0x0
+LINE_2_14: .word 0x0
+LINE_2_15: .word 0x0
+LINE_2_16: .word 0x0
+LINE_2_17: .word 0x0
+LINE_2_18: .word 0x0
+LINE_2_19: .word 0x0
+
+PRE_3_2:   .word 0x0
+PRE_3_1:   .word 0x0
+LINE_3_0:  .word 0x0
+LINE_3_1:  .word 0x0
+LINE_3_2:  .word 0x0
+LINE_3_3:  .word 0x0
+LINE_3_4:  .word 0x0
+LINE_3_5:  .word 0x0
+LINE_3_6:  .word 0x0
+LINE_3_7:  .word 0x0
+LINE_3_8:  .word 0x0
+LINE_3_9:  .word 0x0
+LINE_3_10: .word 0x0
+LINE_3_11: .word 0x0
+LINE_3_12: .word 0x0
+LINE_3_13: .word 0x0
+LINE_3_14: .word 0x0
+LINE_3_15: .word 0x0
+LINE_3_16: .word 0x0
+LINE_3_17: .word 0x0
+LINE_3_18: .word 0x0
+LINE_3_19: .word 0x0
+
+PRE_4_2:   .word 0x0
+PRE_4_1:   .word 0x0
+LINE_4_0:  .word 0x0
+LINE_4_1:  .word 0x0
+LINE_4_2:  .word 0x0
+LINE_4_3:  .word 0x0
+LINE_4_4:  .word 0x0
+LINE_4_5:  .word 0x0
+LINE_4_6:  .word 0x0
+LINE_4_7:  .word 0x0
+LINE_4_8:  .word 0x0
+LINE_4_9:  .word 0x0
+LINE_4_10: .word 0x0
+LINE_4_11: .word 0x0
+LINE_4_12: .word 0x0
+LINE_4_13: .word 0x0
+LINE_4_14: .word 0x0
+LINE_4_15: .word 0x0
+LINE_4_16: .word 0x0
+LINE_4_17: .word 0x0
+LINE_4_18: .word 0x0
+LINE_4_19: .word 0x0
+
+# Contadores das matrizes do jogo
+I_1_0:  .byte 0x0
+I_1_1:  .byte 0x0
+I_1_2:  .byte 0x0
+I_1_3:  .byte 0x0
+I_1_4:  .byte 0x0
+I_1_5:  .byte 0x0
+I_1_6:  .byte 0x0
+I_1_7:  .byte 0x0
+I_1_8:  .byte 0x0
+I_1_9:  .byte 0x0
+I_1_10: .byte 0x0
+I_1_11: .byte 0x0
+I_1_12: .byte 0x0
+I_1_13: .byte 0x0
+I_1_14: .byte 0x0
+I_1_15: .byte 0x0
+I_1_16: .byte 0x0
+I_1_17: .byte 0x0
+I_1_18: .byte 0x0
+I_1_19: .byte 0x0
+
+I_2_0:  .byte 0x0
+I_2_1:  .byte 0x0
+I_2_2:  .byte 0x0
+I_2_3:  .byte 0x0
+I_2_4:  .byte 0x0
+I_2_5:  .byte 0x0
+I_2_6:  .byte 0x0
+I_2_7:  .byte 0x0
+I_2_8:  .byte 0x0
+I_2_9:  .byte 0x0
+I_2_10: .byte 0x0
+I_2_11: .byte 0x0
+I_2_12: .byte 0x0
+I_2_13: .byte 0x0
+I_2_14: .byte 0x0
+I_2_15: .byte 0x0
+I_2_16: .byte 0x0
+I_2_17: .byte 0x0
+I_2_18: .byte 0x0
+I_2_19: .byte 0x0
+
+I_3_0:  .byte 0x0
+I_3_1:  .byte 0x0
+I_3_2:  .byte 0x0
+I_3_3:  .byte 0x0
+I_3_4:  .byte 0x0
+I_3_5:  .byte 0x0
+I_3_6:  .byte 0x0
+I_3_7:  .byte 0x0
+I_3_8:  .byte 0x0
+I_3_9:  .byte 0x0
+I_3_10: .byte 0x0
+I_3_11: .byte 0x0
+I_3_12: .byte 0x0
+I_3_13: .byte 0x0
+I_3_14: .byte 0x0
+I_3_15: .byte 0x0
+I_3_16: .byte 0x0
+I_3_17: .byte 0x0
+I_3_18: .byte 0x0
+I_3_19: .byte 0x0
+
+I_4_0:  .byte 0x0
+I_4_1:  .byte 0x0
+I_4_2:  .byte 0x0
+I_4_3:  .byte 0x0
+I_4_4:  .byte 0x0
+I_4_5:  .byte 0x0
+I_4_6:  .byte 0x0
+I_4_7:  .byte 0x0
+I_4_8:  .byte 0x0
+I_4_9:  .byte 0x0
+I_4_10: .byte 0x0
+I_4_11: .byte 0x0
+I_4_12: .byte 0x0
+I_4_13: .byte 0x0
+I_4_14: .byte 0x0
+I_4_15: .byte 0x0
+I_4_16: .byte 0x0
+I_4_17: .byte 0x0
+I_4_18: .byte 0x0
+I_4_19: .byte 0x0
+
+ISOLATE1: .word 0x0
+ISOLATE2: .word 0x0
+ISOLATE3: .word 0x0
+ISOLATE4: .word 0x0
 
 #Beeps da música
 BEEP: .byte 76 #E6
@@ -546,16 +683,22 @@ collision_check:addu $v0, $zero, $zero
 		
 		addu $t3, $zero, $zero		#inicializa contador da peca
 		
+		li $t4, 88			#tamanho de uma matriz de arena
+		mult $t4, $s3			#calcula o offset da matriz
+		mflo $t4			#coloca offset da matriz no registrador t4
+		
 		addi $t2, $a1, -2		#retira posicoes fantasma
 		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
-		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		la $t1, LINE_1_0		#carrega o inicio da matriz do jogo
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+		add $t1, $t1, $t4		#coloca o endereco da posicao da matriz no registrador t1 com offset
 
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
 		mflo $t2			#move o resultado do offset para o registrador t2
 		
-		la $t8, LINE_19			#carrega o endereco da ultima linha da matriz
+		la $t8, LINE_1_19		#carrega o endereco da ultima linha da matriz
+		add $t8, $t8, $t4		#coloca o endereco da ultima posicao da matriz no registrador t8
 		
 loop_check:	bgeu $t3, 15, end_check		#se contador de colunas >= que 16, sai do loop
 		li $t4, 16			#carrega o imediato 16 no registrador t4
@@ -618,12 +761,22 @@ collision: 	addi $sp, $sp, -4
 		ble $a1, 1, game_end		#se a peca esta acima do teto da arena, vai para game_end
 		addi $a1, $a1, -2		#retira posicoes fantasma
 		
+		li $t4, 88			#tamanho de uma matriz de arena
+		mult $t4, $s3			#calcula o offset da matrz
+		mflo $t4			#coloca o offset da matriz no registrador t4
+		
 		sll $t2, $a1, 2			#calcula offset da linha da matriz do jogo
-		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		la $t1, LINE_1_0			#carrega o inicio da matriz do jogo
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+		add $t1, $t1, $t4		#coloca o endereco da posicao da matriz no registrador t1 com offset
 
-		la $t8, I_0			#carrega o endereco do inicio dos indexes da matriz
+		li $t4, 80			#tamanho de uma matriz de indexes
+		mult $t4, $s3			#calcula o offset da matrz
+		mflo $t4			#coloca o offset da matriz no registrador t4
+		
+		la $t8, I_1_0			#carrega o endereco do inicio dos indexes da matriz
 		add $t8, $t8, $a1		#coloca o endereco da posicao da matriz no registrador t8
+		add $t8, $t8, $t4		#coloca o endereco da posicao da matriz no registrador t8 com offset
 
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
@@ -666,11 +819,24 @@ loop_save_2:	j loop_save			#vai pra inicio do loop
 end_loop_save:	
 
 		addu $s2, $zero, $zero		#reseta peca movel
+				
+		li $t9, 80			#tamanho de uma matriz de indexes
+		mult $t9, $s3			#calcula o offset da matrz
+		mflo $t9			#coloca o offset da matriz no registrador t4
 		
-		la $t0, I_19			#carrega o endereco do ultimo index da matriz
-		la $t1, I_0			#carrega o endereco do primeiro index da matriz
-		la $t2, LINE_19			#carrega o endereco da ultima linha da matriz
-		la $t3, LINE_0			#carrega o endereco da primeira linha da matriz
+		la $t0, I_1_19			#carrega o endereco do ultimo index da matriz
+		addu $t0, $t0, $t9		#soma endereco ao offset
+		la $t1, I_1_0			#carrega o endereco do primeiro index da matriz
+		addu $t1, $t1, $t9		#soma endereco ao offset
+		
+		li $t9, 88			#tamanho de uma matriz de arena
+		mult $t9, $s3			#calcula o offset da matrz
+		mflo $t9			#coloca o offset da matriz no registrador t4
+		
+		la $t2, LINE_1_19		#carrega o endereco da ultima linha da matriz
+		addu $t2, $t2, $t9		#soma endereco ao offset
+		la $t3, LINE_1_0		#carrega o endereco da primeira linha da matriz
+		addu $t3, $t3, $t9		#soma endereco ao offset
 						
 loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda, sai do loop
 		lbu $t4, 0($t0)			#carrega o index
@@ -683,9 +849,12 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 		lw $ra, 0($sp)			#pega da pilha
 		addi $sp, $sp, 4
 		
-		lhu $t5, SCORE1
+		la $t8, SCORE1			#carrega o endereco do score na memoria
+		sll $t9, $s3, 2			#calcula o offset do score
+		addu $t8, $t8, $t9		#soma o endereco do score com o offset
+		lhu $t5, 0($t8)
 		addiu $t5, $t5, 100
-		sh $t5, SCORE1
+		sh $t5, 0($t8)
 		
 		addiu $t4, $t2, 0		#copia o endereco da linha da matriz
 		addiu $t5, $t0, 0		#copia o index da linha da matriz
@@ -918,8 +1087,13 @@ plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 
+		li $t8, 88
+		mult $t8, $s3
+		mflo $t8
+
 		sll $t0, $a0, 2
-		la $t9, LINE_0
+		la $t9, LINE_1_0
+		addu $t9, $t9, $t8
 		add $t0, $t0, $t9	# endereco da linha a ser plotada
 		lw $t0, 0($t0)		# carrega a linha a ser plotada
 		
