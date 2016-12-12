@@ -29,6 +29,8 @@
 .eqv OFFSET_Y1 29
 
 .data
+FILE: .asciiz "output.bin"
+
 # Pecas moveis
 PIECE_1: .half 0x0
 PIECE_2: .half 0x0
@@ -323,11 +325,31 @@ MAIN:		move $s3, $zero
 		
 		li $v0, 5		# Le do teclado a quantidade de jogadores
 		syscall
+		move $s3, $v0
 		
-		beq $v0, 4, P4		# Seleciona os parametros dependentes do número de jogadores
-		beq $v0, 3, P3
-		beq $v0, 2, P2
-		beq $v0, 1, P1
+		# Abre o arquivo
+		la $a0,FILE
+		li $a1,0
+		li $a2,0
+		li $v0,13
+		syscall
+
+		# Le o arquivos para a memoria VGA
+		move $a0,$v0
+		la $a1,0xFF000000
+		li $a2,76800
+		li $v0,14
+		syscall
+
+		#Fecha o arquivo
+		move $a0,$s1
+		li $v0,16
+		syscall
+		
+		beq $s3, 4, P4		# Seleciona os parametros dependentes do número de jogadores
+		beq $s3, 3, P3
+		beq $s3, 2, P2
+		beq $s3, 1, P1
 		
 P4:		la $t0, PAR_4P 
 		j pass_main
@@ -1320,6 +1342,25 @@ saiy:		add $t0, $t0, 1		# incrementa o contador de x
 		j loopx
 saix:		jr $ra	
 
+
+#################################################################################################
+######### A rotina abaixo plota a prima peça que vai descer. Recebe en $a2 e $a3 o tipo da
+######### peça e a rotação.
+#################################################################################################
+plot_prox:	andi $t0, $s7, 0x000000FF
+		andi $t1, $s7, 0x00FF0000
+		srl $t1, $t1, 16
+		mult $t0, $s3
+		mflo $t0
+		add $a0, $t0, $t1
+		add $a0, $a0, 21
+		li $a1, 15
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		jal plot
+		lw $ra, 0($sp)
+		jr $ra
+
 #################################################################################################
 ######### A rotina abaixo plota o ambiente do jogo.
 #################################################################################################		
@@ -1382,7 +1423,7 @@ sai0:		li $a2, PAR_Y0			# pos_y = inicio_area_jogo_y + altura_area_jogo + lado_q
 loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
 		la $a0, PTS			# carrega string 'Score'
 		move $a1, $t1			# plota string
-		li $a3, 0xFF00
+		li $a3, 0xFE00
 		li $v0, 104
 		syscall
 		andi $t3, $s7, 0x000000FF	# x = x + shift_x
@@ -1414,7 +1455,40 @@ sai_score:	add $s3, $zero, $zero
 		lw $ra, 16($sp)
 		addi $sp, $sp, 20
 		
-		jr $ra
+		############################################### Plota espaço para a próxima peça
+		move $t3, $zero			# Inicializa fim_plot_x
+		li $a3, BLACK			# Cor do fundo
+		move $t0, $a0			# x_inicial = início da área de jogo em x
+		andi $t7, $s7, 0x000000FF	# offset
+		andi $t8, $s7, 0xFF000000
+		srl $t8, $t8, 24		# número de jogadores
+		move $t2, $a0			# início da área de jogo em x
+		
+		move $t6, $zero
+		addi $t2, $t2, 21
+loop00:		beq $t6, $t8, sai00
+		move $t0, $t2
+		addi $t3, $t2, 28		# fim_plot_x = x_inicial + largura_area_jogo 
+loop01:		bgt $t0, $t3, sai01		# se x >= fim_plot_x, sai
+		li $t1, 15			# y_inicial = inicio da area de jogo em y
+		li $t5, 43			# fim_plot_y = y_inicial + altura da área de jogo
+loop02:		bge $t1, $t5, sai02		# se y >= fim_plot_y, sai
+		mult $t1, $t9 			# y*320
+		mflo $t4
+		add $t4, $t4, $t0		# y*320 + x
+		addi $t4, $t4, VGA		# endereço inicial + offset calculado
+		sb $a3, 0($t4)			# plota um pixel na tela
+		addi $t1, $t1, 1		# incrementa o contador
+		j loop02
+		
+sai02:		addi $t0, $t0, 1		# incrementa x 
+		j loop01
+		
+sai01:		add $t2, $t2, $t7		# x_inicial da próxima área de jogo
+		addi $t6, $t6, 1
+		j loop00
+
+sai00:		jr $ra
 		
 #################################################################################################
 ######### Atualiza a pontuação de um jogador. Recebe como argumento em $a0 a pontuação
@@ -1444,7 +1518,7 @@ write_score:	addi $sp, $sp, -16		# salva os argumentos na pilha
 		addi $t2, $t2, SIDE
 		addi $t2, $t2, SIDE
 		move $a1, $t2
-		li $a3, 0xFF00
+		li $a3, 0xFE00
 		li $v0, 101
 		syscall				# plota a pontuação na tela do jogador
 		
