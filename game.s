@@ -173,9 +173,6 @@ LINE_4_17: .word 0x0
 LINE_4_18: .word 0x0
 LINE_4_19: .word 0x0
 
-# Contador de linhas consumidas
-CONSUMED: .byte 0x0
-
 # Contadores das matrizes do jogo
 I_1_0:  .byte 0x0
 I_1_1:  .byte 0x0
@@ -261,10 +258,12 @@ I_4_17: .byte 0x0
 I_4_18: .byte 0x0
 I_4_19: .byte 0x0
 
-ISOLATE1: .word 0x0
-ISOLATE2: .word 0x0
-ISOLATE3: .word 0x0
-ISOLATE4: .word 0x0
+# Contador de linhas consumidas
+CONSUMED: .byte 0x0
+
+# Salva o tempo do ciclo
+CYCLE_TIME: .word 0x1f4
+CYCLE_BASE: .word 0x1f4
 
 #Beeps da música
 BEEP: .byte 76 #E6
@@ -412,13 +411,17 @@ continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
 		add $a0, $t1, $zero		#seta o codigo da tecla pressionada como argumento
 		jal input 			#senao, trata input
 		
-continue_gl1:	subu $t0, $s1, $s4		#calcula o tempo entre a ultima vez que a peca desceu e agora 
-		bltu $t0, 400, continue_gl2	#checa se há tempo acumulado suficiente para tocar o beep da musica
+continue_gl1:	la $t1, CYCLE_TIME		#pega o tempo endereco do tempo de ciclo da memoria
+		lw $t2, 0($t1)			#pega o tempo do tempo de ciclo da memoria
+		subu $t0, $s1, $s4		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, $t2, continue_gl2	#checa se há tempo acumulado suficiente para tocar o beep da musica
 		jal play_music			#toca um beep da musica
 		add $s4, $zero, $s1		#seta o acumulador de tempo
 		
-continue_gl2:	subu $t0, $s1, $s0		#calcula o tempo entre a ultima vez que a peca desceu e agora 
-		bltu $t0, 400, continue_gl4	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
+continue_gl2:	la $t1, CYCLE_TIME		#pega o tempo endereco do tempo de ciclo da memoria
+		lw $t2, 0($t1)			#pega o tempo do tempo de ciclo da memoria
+		subu $t0, $s1, $s0		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, $t2, continue_gl4	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
 		add $s0, $zero, $s1		#seta o acumulador de tempo
 		srl $t0, $s7, 24		#coloca quantos jogadores sao no total em t0
 		addiu $t1, $s3, 1		#incrementa o jogador
@@ -1013,16 +1016,33 @@ collision_1:	la $t8, SCORE1			#carrega o endereco do score na memoria
 
 collision_l_1:	addiu $a0, $a0, 40
 		j collision_score	
-collision_l_2:	addiu $a0, $a0, 100
+collision_l_2:	addiu $a0, $a0, 90
 		j collision_score
-collision_l_3:	addiu $a0, $a0, 300
+collision_l_3:	addiu $a0, $a0, 150
 		j collision_score
-collision_l_4:	addiu $a0, $a0, 1200
+collision_l_4:	addiu $a0, $a0, 300
 		j collision_score
 collision_score:sh $a0, 0($t8)
 		sb $zero, CONSUMED
 		
-		addi $sp, $sp, -4
+		li $t0, 200
+		div $a0, $t0
+		mflo $t0
+		
+		li $t1, 50
+		mult $t0, $t1
+		mflo $t0
+		
+		la $t1, CYCLE_BASE
+		lw $t1, 0($t1)
+		sub $t0, $t1, $t0
+		
+		la $t1, CYCLE_TIME
+		lw $t2, 0($t1)
+		bge $t0, $t2, no_level
+		sw $t0, 0($t1)
+		
+no_level:	addi $sp, $sp, -4
 		sw $ra, 0($sp)
 		jal write_score 
 		lw $ra, 0($sp)
