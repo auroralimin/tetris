@@ -22,7 +22,7 @@
 .eqv PURPLE 0xCC #0x87
 
 .data
-FILE: .asciiz "a.bin"
+FILE: .asciiz "output.bin"
 
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
 L0: .half 0x2e00, 0x88c0, 0xe800, 0xc440
@@ -34,7 +34,7 @@ Z0: .half 0x4c80, 0xc600, 0x4c80, 0xc600
 Q0: .half 0xcc00, 0xcc00, 0xcc00, 0xcc00
 
 # Mensagens para display
-MSG0:.asciiz "Insira o numero de jogadores (1-4): "
+MSG0:.asciiz "Insert the number of players (1-4): "
 PTS: .asciiz "Score"
 GAME_OVER: .asciiz "GAME OVER"
 
@@ -71,7 +71,18 @@ SCORE12: .word 0x00750000	# Jogador 1 (upper 2 bytes) e 2 (lower 2 bytes)
 SCORE34: .word 0x00000000	# Jogador 3 (upper 2 bytes) e 4 (lower 2 bytes) 
 	  
 .text
-MAIN:		# Abre o arquivo
+MAIN:		la $a0, MSG0		# Pergunta quantidade de jogadores
+		li $a1, 3
+		li $a2, 3
+		li $a3, 0xFF00
+		li $v0, 104
+		syscall
+		
+		li $v0, 5		# Le do teclado a quantidade de jogadores
+		syscall
+		move $s3, $v0
+		
+		# Abre o arquivo
 		la $a0,FILE
 		li $a1,0
 		li $a2,0
@@ -89,21 +100,11 @@ MAIN:		# Abre o arquivo
 		move $a0,$s1
 		li $v0,16
 		syscall
-
-		la $a0, MSG0		# Pergunta quantidade de jogadores
-		li $a1, 3
-		li $a2, 3
-		li $a3, 0xFF00
-		li $v0, 104
-		syscall
 		
-		li $v0, 5		# Le do teclado a quantidade de jogadores
-		syscall
-		
-		beq $v0, 4, P4		# Seleciona os parametros dependentes do número de jogadores
-		beq $v0, 3, P3
-		beq $v0, 2, P2
-		beq $v0, 1, P1
+		beq $s3, 4, P4		# Seleciona os parametros dependentes do número de jogadores
+		beq $s3, 3, P3
+		beq $s3, 2, P2
+		beq $s3, 1, P1
 		
 P4:		la $t0, PAR_4P 
 		j pass_main
@@ -424,39 +425,9 @@ sai2:		addi $t0, $t0, 1		# incrementa x
 		
 sai1:		add $t0, $t0, $t2		# x_inicial da próxima área de jogo
 		j loop0
-
-# Os blocos seguintes plotam os placares
-sai0:		li $a2, PAR_Y0			# pos_y = inicio_area_jogo_y + altura_area_jogo + lado_quadrado 
-		addi $a2, $a2, PAR_Y1		
-		addi $a2, $a2, SIDE
-		
-		li $t1, NUMX			# fim_x
-		andi $t2, $s0, 0x00FF0000	# limite_x
-		srl $t2, $t2, 16
-		sub $t0, $t1, $t2		
-		andi $t1, $s0, 0x00FF0000	# x_inicial = inicio_area_jogo_x
-		srl $t1, $t1, 16
-		addi $t1, $t1, SIDE
-		addi $t1, $t1, SIDE
-loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
-		la $a0, PTS			# carrega string 'Score'
-		move $a1, $t1			# plota string
-		li $a3, 0xFF00
-		li $v0, 104
-		syscall
-		andi $t3, $s0, 0x000000FF	# x = x + shift_x
-		add $t1, $t1, $t3
-		j loop_score
-		
-sai_score:	lw $a0, 0($sp)
-		lw $a1, 4($sp)
-		lw $a2, 8($sp)
-		lw $a3, 12($sp)
-		lw $ra, 16($sp)
-		addi $sp, $sp, 20
 		
 ############################################### Plota espaço para a próxima peça
-		move $t3, $zero			# Inicializa fim_plot_x
+sai0:		move $t3, $zero			# Inicializa fim_plot_x
 		li $a3, BLACK			# Cor do fundo
 		move $t0, $a0			# x_inicial = início da área de jogo em x
 		andi $t7, $s0, 0x000000FF	# offset
@@ -488,7 +459,36 @@ sai01:		add $t2, $t2, $t7		# x_inicial da próxima área de jogo
 		addi $t6, $t6, 1
 		j loop00
 		
-sai00:		jr $ra
+sai00:		# Os blocos seguintes plotam os placares
+		li $a2, PAR_Y0			# pos_y = inicio_area_jogo_y + altura_area_jogo + lado_quadrado 
+		addi $a2, $a2, PAR_Y1		
+		addi $a2, $a2, SIDE
+		
+		li $t1, NUMX			# fim_x
+		andi $t2, $s0, 0x00FF0000	# limite_x
+		srl $t2, $t2, 16
+		sub $t0, $t1, $t2		
+		andi $t1, $s0, 0x00FF0000	# x_inicial = inicio_area_jogo_x
+		srl $t1, $t1, 16
+		addi $t1, $t1, SIDE
+		addi $t1, $t1, SIDE
+loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
+		la $a0, PTS			# carrega string 'Score'
+		move $a1, $t1			# plota string
+		li $a3, 0xFE00
+		li $v0, 104
+		syscall
+		andi $t3, $s0, 0x000000FF	# x = x + shift_x
+		add $t1, $t1, $t3
+		j loop_score
+		
+sai_score:	lw $a0, 0($sp)
+		lw $a1, 4($sp)
+		lw $a2, 8($sp)
+		lw $a3, 12($sp)
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
+		jr $ra
 
 #################################################################################################
 ######### A rotina abaixo plota a prima peça que vai descer. Recebe en $a2 e $a3 o tipo da
@@ -539,7 +539,7 @@ write_score:	addi $sp, $sp, -16		# salva os argumentos na pilha
 		addi $t2, $t2, SIDE
 		addi $t2, $t2, SIDE
 		move $a1, $t2
-		li $a3, 0xFF00
+		li $a3, 0xFE00
 		li $v0, 101
 		syscall				# plota a pontuação na tela do jogador
 		
