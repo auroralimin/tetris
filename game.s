@@ -423,14 +423,23 @@ game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		lhu $s2, 0($t0)			#carrega a peca movel no registrador s2
 		sh $t3, 0($t0)			#salva a nova peca na memoria
 	
+		sll $a2, $s2, 29		#isola tipo
+		srl $a2, $a2, 29		#isola tipo
+		srl $a3, $s2, 14		#isola a rotacao
+		sll $a3, $a3, 1			##seta o plot como negativo
+	
+		addi $sp, $sp, -4
+		sw $t3, 0($sp)
+		jal plot_prox
+		lw $t3, 0($sp)
+		addi $sp, $sp, 4
+	
 		sll $a2, $t3, 29		#isola tipo
 		srl $a2, $a2, 29		#isola tipo
 		srl $a3, $t3, 14		#isola a rotacao
 		sll $a3, $a3, 1			#isola a rotacao
 		addi $a3, $a3, 1		#seta o plot como positivo
-		
-		li $a2, 3
-		li $a3, 1
+	
 		jal plot_prox
 		
 		la $t1, PIECE_1			#carrega o endereco da primeira peca movel
@@ -1375,7 +1384,11 @@ fim_plot_mat:	jr $ra
 ######### A rotina abaixo plota um quadrado 7x7 pixels. Recebe como argumento  
 ######### a localização (x,y) e a cor.
 #################################################################################################		
-plot_square:	bleu $a1, 43, saix	# impede de imprimir quadrado fora do campo
+plot_square:	sgtu $t5, $a1, 43
+		andi $s5, $s7, 0xF0000000
+		srl $s5, $s5, 28
+		or $t5, $s5, $t5
+		beqz $t5, saix	# impede de imprimir quadrado fora do campo
 		li $t5, PAR_Y0		# Posição inicial da tela de jogo em Y
 		li $t2, SIDE		# Lado do quadrado l
 		addi $t2, $t2, -1	# l = l - 1
@@ -1388,6 +1401,7 @@ loopy:		beq $t1, $t2, saiy	# se count_y = l, sai
 		add $t4, $t1, $a1	# y = count_y + y_inicial
 		
 		sgt $t5, $t4, $t5	# se y está fora área de jogo, não plota
+		or $t5, $s5, $t5
 		beq $t5, $zero, pass_sq
 		li $t9, NUMX		
 		mult $t4, $t9		# y*320
@@ -1406,7 +1420,8 @@ saix:		jr $ra
 ######### A rotina abaixo plota a prima peça que vai descer. Recebe en $a2 e $a3 o tipo da
 ######### peça e a rotação.
 #################################################################################################
-plot_prox:	andi $t0, $s7, 0x000000FF
+plot_prox:	ori $s7, $s7, 0x10000000
+		andi $t0, $s7, 0x000000FF
 		andi $t1, $s7, 0x00FF0000
 		srl $t1, $t1, 16
 		mult $t0, $s3
@@ -1419,6 +1434,7 @@ plot_prox:	andi $t0, $s7, 0x000000FF
 		jal plot
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
+		andi $s7, $s7, 0x0FFFFFFF
 		jr $ra
 
 #################################################################################################
@@ -1520,7 +1536,7 @@ sai_score:	add $s3, $zero, $zero
 		li $a3, BLACK			# Cor do fundo
 		move $t0, $a0			# x_inicial = início da área de jogo em x
 		andi $t7, $s7, 0x000000FF	# offset
-		andi $t8, $s7, 0xFF000000
+		andi $t8, $s7, 0x0F000000
 		srl $t8, $t8, 24		# número de jogadores
 		move $t2, $a0			# início da área de jogo em x
 		
