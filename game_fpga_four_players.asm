@@ -10,7 +10,6 @@
 .eqv STOPWATCH_ADDRESS 0xFFFF050C
 .eqv LFSR_ADDRESS 0xFFFF0510
 
-
 # Lado do quadrado
 .eqv SIDE 7
 
@@ -38,6 +37,24 @@
 .eqv OFFSET_Y1 29
 
 .data
+# Pecas moveis
+PIECE_1: .half 0x0
+PIECE_2: .half 0x0
+PIECE_3: .half 0x0
+PIECE_4: .half 0x0
+
+# Inputs
+INPUT_1: .word 0x0
+INPUT_2: .word 0x0
+INPUT_3: .word 0x0
+INPUT_4: .word 0x0
+
+# Acumuladores de tempo
+TIME_1: .word 0x0
+TIME_2: .word 0x0
+TIME_3: .word 0x0
+TIME_4: .word 0x0
+
 # Matrizes para plotar as peças em suas 4 possíveis rotações 
 L0: .half 0x2e00, 0x88c0, 0xe800, 0xc440
 I0: .half 0xf000, 0x8888, 0xf000, 0x8888
@@ -53,10 +70,10 @@ PTS: .asciiz "Score"
 GAME_OVER: .asciiz "GAME OVER"
 
 # Parametros dependentes do número de jogadores
-PAR_4P: .word 0x00081D4E	# 4 jogadores
-PAR_3P:	.word 0x001c3162	# 3 jogadores
-PAR_2P:	.word 0x003C5182	# 2 jogadores
-PAR_1P:	.word 0x007d92c3	# 1 jogador
+PAR_4P: .word 0x04081D4E	# 4 jogadores
+PAR_3P:	.word 0x031c3162	# 3 jogadores
+PAR_2P:	.word 0x023C5182	# 2 jogadores
+PAR_1P:	.word 0x017d92c3	# 1 jogador
 
 # Pontuações
 SCORE1: .half 0x0
@@ -69,51 +86,95 @@ ARG_LABEL1: .word 0x0		# Argumento que vai conter a label para possiveis jumps i
 ARG_LABEL2: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 ARG_LABEL3: .word 0x0		# Argumento que vai conter a label para possiveis jumps incondicionais
 
-# Matriz do jogo
-PRE_2:	 .word 0x0
-PRE_1:   .word 0x0
-LINE_0:  .word 0x0
-LINE_1:  .word 0x0
-LINE_2:  .word 0x0
-LINE_3:  .word 0x0
-LINE_4:  .word 0x0
-LINE_5:  .word 0x0
-LINE_6:  .word 0x0
-LINE_7:  .word 0x0
-LINE_8:  .word 0x0
-LINE_9:  .word 0x0
-LINE_10: .word 0x0
-LINE_11: .word 0x0
-LINE_12: .word 0x0
-LINE_13: .word 0x0
-LINE_14: .word 0x0
-LINE_15: .word 0x0
-LINE_16: .word 0x0
-LINE_17: .word 0x0
-LINE_18: .word 0x0
-LINE_19: .word 0x0
+# Contadores das matrizes do jogo
+I_1_0:  .byte 0x0
+I_1_1:  .byte 0x0
+I_1_2:  .byte 0x0
+I_1_3:  .byte 0x0
+I_1_4:  .byte 0x0
+I_1_5:  .byte 0x0
+I_1_6:  .byte 0x0
+I_1_7:  .byte 0x0
+I_1_8:  .byte 0x0
+I_1_9:  .byte 0x0
+I_1_10: .byte 0x0
+I_1_11: .byte 0x0
+I_1_12: .byte 0x0
+I_1_13: .byte 0x0
+I_1_14: .byte 0x0
+I_1_15: .byte 0x0
+I_1_16: .byte 0x0
+I_1_17: .byte 0x0
+I_1_18: .byte 0x0
+I_1_19: .byte 0x0
 
-# Contadores da matriz do jogo
-I_0:  .byte 0x0
-I_1:  .byte 0x0
-I_2:  .byte 0x0
-I_3:  .byte 0x0
-I_4:  .byte 0x0
-I_5:  .byte 0x0
-I_6:  .byte 0x0
-I_7:  .byte 0x0
-I_8:  .byte 0x0
-I_9:  .byte 0x0
-I_10: .byte 0x0
-I_11: .byte 0x0
-I_12: .byte 0x0
-I_13: .byte 0x0
-I_14: .byte 0x0
-I_15: .byte 0x0
-I_16: .byte 0x0
-I_17: .byte 0x0
-I_18: .byte 0x0
-I_19: .byte 0x0
+I_2_0:  .byte 0x0
+I_2_1:  .byte 0x0
+I_2_2:  .byte 0x0
+I_2_3:  .byte 0x0
+I_2_4:  .byte 0x0
+I_2_5:  .byte 0x0
+I_2_6:  .byte 0x0
+I_2_7:  .byte 0x0
+I_2_8:  .byte 0x0
+I_2_9:  .byte 0x0
+I_2_10: .byte 0x0
+I_2_11: .byte 0x0
+I_2_12: .byte 0x0
+I_2_13: .byte 0x0
+I_2_14: .byte 0x0
+I_2_15: .byte 0x0
+I_2_16: .byte 0x0
+I_2_17: .byte 0x0
+I_2_18: .byte 0x0
+I_2_19: .byte 0x0
+
+I_3_0:  .byte 0x0
+I_3_1:  .byte 0x0
+I_3_2:  .byte 0x0
+I_3_3:  .byte 0x0
+I_3_4:  .byte 0x0
+I_3_5:  .byte 0x0
+I_3_6:  .byte 0x0
+I_3_7:  .byte 0x0
+I_3_8:  .byte 0x0
+I_3_9:  .byte 0x0
+I_3_10: .byte 0x0
+I_3_11: .byte 0x0
+I_3_12: .byte 0x0
+I_3_13: .byte 0x0
+I_3_14: .byte 0x0
+I_3_15: .byte 0x0
+I_3_16: .byte 0x0
+I_3_17: .byte 0x0
+I_3_18: .byte 0x0
+I_3_19: .byte 0x0
+
+I_4_0:  .byte 0x0
+I_4_1:  .byte 0x0
+I_4_2:  .byte 0x0
+I_4_3:  .byte 0x0
+I_4_4:  .byte 0x0
+I_4_5:  .byte 0x0
+I_4_6:  .byte 0x0
+I_4_7:  .byte 0x0
+I_4_8:  .byte 0x0
+I_4_9:  .byte 0x0
+I_4_10: .byte 0x0
+I_4_11: .byte 0x0
+I_4_12: .byte 0x0
+I_4_13: .byte 0x0
+I_4_14: .byte 0x0
+I_4_15: .byte 0x0
+I_4_16: .byte 0x0
+I_4_17: .byte 0x0
+I_4_18: .byte 0x0
+I_4_19: .byte 0x0
+
+ISOLATE1: .word 0x0
+ISOLATE2: .word 0x0
+ISOLATE3: .word 0x0
+ISOLATE4: .word 0x0
 
 #Beeps da música
 BEEP: .byte 76 #E6
@@ -163,12 +224,104 @@ DURATION: .byte 255
 #Volume da nota
 VOLUME: .byte 127
 
+# Matrizes do jogo
+PRE_1_2:   .word 0x0
+PRE_1_1:   .word 0x0
+LINE_1_0:  .word 0x0
+LINE_1_1:  .word 0x0
+LINE_1_2:  .word 0x0
+LINE_1_3:  .word 0x0
+LINE_1_4:  .word 0x0
+LINE_1_5:  .word 0x0
+LINE_1_6:  .word 0x0
+LINE_1_7:  .word 0x0
+LINE_1_8:  .word 0x0
+LINE_1_9:  .word 0x0
+LINE_1_10: .word 0x0
+LINE_1_11: .word 0x0
+LINE_1_12: .word 0x0
+LINE_1_13: .word 0x0
+LINE_1_14: .word 0x0
+LINE_1_15: .word 0x0
+LINE_1_16: .word 0x0
+LINE_1_17: .word 0x0
+LINE_1_18: .word 0x0
+LINE_1_19: .word 0x0
+
+PRE_2_2:   .word 0x0
+PRE_2_1:   .word 0x0
+LINE_2_0:  .word 0x0
+LINE_2_1:  .word 0x0
+LINE_2_2:  .word 0x0
+LINE_2_3:  .word 0x0
+LINE_2_4:  .word 0x0
+LINE_2_5:  .word 0x0
+LINE_2_6:  .word 0x0
+LINE_2_7:  .word 0x0
+LINE_2_8:  .word 0x0
+LINE_2_9:  .word 0x0
+LINE_2_10: .word 0x0
+LINE_2_11: .word 0x0
+LINE_2_12: .word 0x0
+LINE_2_13: .word 0x0
+LINE_2_14: .word 0x0
+LINE_2_15: .word 0x0
+LINE_2_16: .word 0x0
+LINE_2_17: .word 0x0
+LINE_2_18: .word 0x0
+LINE_2_19: .word 0x0
+
+PRE_3_2:   .word 0x0
+PRE_3_1:   .word 0x0
+LINE_3_0:  .word 0x0
+LINE_3_1:  .word 0x0
+LINE_3_2:  .word 0x0
+LINE_3_3:  .word 0x0
+LINE_3_4:  .word 0x0
+LINE_3_5:  .word 0x0
+LINE_3_6:  .word 0x0
+LINE_3_7:  .word 0x0
+LINE_3_8:  .word 0x0
+LINE_3_9:  .word 0x0
+LINE_3_10: .word 0x0
+LINE_3_11: .word 0x0
+LINE_3_12: .word 0x0
+LINE_3_13: .word 0x0
+LINE_3_14: .word 0x0
+LINE_3_15: .word 0x0
+LINE_3_16: .word 0x0
+LINE_3_17: .word 0x0
+LINE_3_18: .word 0x0
+LINE_3_19: .word 0x0
+
+PRE_4_2:   .word 0x0
+PRE_4_1:   .word 0x0
+LINE_4_0:  .word 0x0
+LINE_4_1:  .word 0x0
+LINE_4_2:  .word 0x0
+LINE_4_3:  .word 0x0
+LINE_4_4:  .word 0x0
+LINE_4_5:  .word 0x0
+LINE_4_6:  .word 0x0
+LINE_4_7:  .word 0x0
+LINE_4_8:  .word 0x0
+LINE_4_9:  .word 0x0
+LINE_4_10: .word 0x0
+LINE_4_11: .word 0x0
+LINE_4_12: .word 0x0
+LINE_4_13: .word 0x0
+LINE_4_14: .word 0x0
+LINE_4_15: .word 0x0
+LINE_4_16: .word 0x0
+LINE_4_17: .word 0x0
+LINE_4_18: .word 0x0
+LINE_4_19: .word 0x0
+
 .text
-MAIN:		
-		li $a0, WHITE
+MAIN:		li $a0, WHITE
 		li $v0, 48
 		syscall
-		
+
 		move $s3, $zero
 		la $a0, MSG0		# Pergunta quantidade de jogadores
 		li $a1, 3
@@ -177,14 +330,15 @@ MAIN:
 		li $v0, 104
 		syscall
 		
+		
+		
 		# Le do controle a quantidade de jogadores
 		la $t0, IRDA_CONTROL
 		li $t1, 1
 		sw $t1,0($t0)
 		la $t0, IRDA_READ
 		
-input_players:
-		lw $t1,0($t0)
+input_players:	lw $t1,0($t0)
 		beq $t1,$zero, input_players
 		
 		srl $t1,$t1,16
@@ -217,75 +371,181 @@ pass_main:	lw $s7, 0($t0)		# Carrega parâmetros da memória
 		li $a3, NUMX
 		jal show_initial	# Plota tela inicial de jogo
 		
-		lw $s6, SCORE1		# Carrega da memória as pontuações dos jogadores
-		lw $s5, SCORE2
 		andi $a0, $s6, 0xFFFF0000
 		srl $a0, $a0, 16
 		li $a1, 0
-		jal write_score		# Escreve a pontuação do jogador 1
-
+		
+		jal sys_time			#pega o tempo do sistema em ms
+		add $s0, $zero, $v0		#seta o acumulador de tempo
+		add $s4, $zero, $v0		#seta o acumulador de tempo
+		
+		
 
 game_loop:	jal sys_time			#pega o tempo do sistema em ms
-		addiu $s1, $v0, 0		#coloca o tempo do sistema no registrador s1
+		add $s1, $zero, $v0		#seta o acumulador de tempo
 		
-		beq $s2,0xFFFFFFFF,continue_gl2#se esta no fim do jogo, vai pro fim do loop
+		la $t0, PIECE_1			#carrega o endereco da primeira peca movel
+		sll $t1, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco da peca movel
+		lhu $s2, 0($t0)			#carrega a peca movel no registrador s2
+		
+		la $t0, TIME_1			#carrega o endereco do  primeiro timer
+		sll $t1, $s3, 2			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco do timer
+		lw $s0, 0($t0)			#carrega o timer no registrador s0
+
+		beq $s2,0xFFFF,continue_gl4 #se esta no fim do jogo, vai pro fim do loop
 		
 		bne $s2, $zero, continue_gl0 	#checa se tem uma peca movel em jogo
 		jal rand7			#se sim, randomiza o tipo da peca	
 		li $s2, INIT_PIECE		#inicializa uma nova peca
 		addiu $s2, $s2, 1
 		addu $s2, $s2, $v0		#seta o tipo da peca
-		li $s0, 501			#acumula tempo suficiente pra ciclo
+		li $s0, 0			#acumula tempo suficiente pra ciclo
 
 continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
-		beq $v0, 0, continue_gl1	#se nao teve input, continua o loop
+		la $t0, INPUT_1			#carrega o endereco do input
+		sll $t1, $s3, 2			#calcula o offset do input
+		addu $t0, $t0, $t1		#soma endereco do input com offset
+		lw $t1, 0($t0)			#pega input na memoria
+		sw $zero, 0($t0)		#reseta input
+		beq $t1, 0, continue_gl1	#se nao teve input, continua o loop
 		
-		add $a0, $v0, $zero		#seta o codigo da tecla pressionada como argumento
+		add $a0, $t1, $zero		#seta o codigo da tecla pressionada como argumento
 		jal input 			#senao, trata input
 		
-continue_gl1:	ble $s0, 300,continue_gl2	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
-		addu $s0, $zero, $zero		#reseta o acumulador de tempo
-		la $t0, update_down		#seta label a ser usada como argumento
+continue_gl1:	subu $t0, $s1, $s4		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, 400, continue_gl2	#checa se há tempo acumulado suficiente para tocar o beep da musica
+		jal play_music			#toca um beep da musica
+		add $s4, $zero, $s1		#seta o acumulador de tempo
+		
+continue_gl2:	subu $t0, $s1, $s0		#calcula o tempo entre a ultima vez que a peca desceu e agora 
+		bltu $t0, 400, continue_gl4	#checa se há tempo acumulado suficiente para o ciclo de movimento da peca
+		add $s0, $zero, $s1		#seta o acumulador de tempo
+		srl $t0, $s7, 24		#coloca quantos jogadores sao no total em t0
+		addiu $t1, $s3, 1		#incrementa o jogador
+		blt $t1, $t0, continue_gl3	#se o jogador e' valido, continua o loop sem resetar o acumulador de tempo
+		
+continue_gl3:	la $t0, update_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL1		#salva o valor do endereco da label no endereco ARG_LABEL1
 		la $t0, after_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL2		#salva o valor do endereco da label no endereco ARG_LABEL2
 		la $t0, reset_down		#seta label a ser usada como argumento
 		sw $t0, ARG_LABEL3		#salva o valor do endereco da label no endereco ARG_LABEL3
 		
-		jal play_music			#toca um beep da musica
 		jal cycle
 	
-		beqz $v0, continue_gl2		#se nao houver colisao, vai para continue_gl2
+		beqz $v0, continue_gl4		#se nao houver colisao, vai para continue_gl2
 		
 		jal collision
-		
 
-
-continue_gl2:	jal sys_time			#pega o tempo do sistema em ms
-		subu $t0, $v0, $s1		#calcula o tempo que o ciclo demorou
-		addu $s0, $s0, $t0		#incrementa o acumulador de tempo
-		j game_loop			#volta para o inicio do loop
+continue_gl4:	la $t0, PIECE_1			#carrega o endereco da primeira peca movel
+		sll $t1, $s3, 1			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco da peca movel
+		sh $s2, 0($t0)			#salva na memoria a peca movel
 		
+		la $t0, TIME_1			#carrega o endereco do  primeiro timer
+		sll $t1, $s3, 2			#carrega o offset do endereco que muda de acordo com o player
+		addu $t0, $t0, $t1		#calcula o endereco do timer
+		sw $s0, 0($t0)			#salva o timer
+		
+		srl $t0, $s7, 24		#coloca quantos jogadores sao no total em t0
+		addiu $s3, $s3, 1		#incrementa o jogador
+		blt $s3, $t0, continue_gl5	#se o jogador e' valido, continua o loop sem resetar jogador
+		add $s3, $zero, $zero
+
+continue_gl5: j game_loop
+
 #################################################################################################
-keyboard:	la $t1,IRDA_CONTROL
-		li $t0,1
-		sw $t0,0($t1)
+keyboard:	la $t1,IRDA_READ
+		la $t2,IRDA_CONTROL
 		
-		la $t1,IRDA_READ
+		li $t3, 1		
+		sw $t3,0($t2)
+		
 		lw $t0,0($t1)
-   		beq $t0,$zero, not_pressed   	# Se nao ha tecla pressionada, finaliza
-   		
-  		srl $v0,$t0,16				# Tecla lida
-  		
-		j keyboard_end
-not_pressed:	add $v0, $zero, $zero		# se tecla nao pressionada, coloca zero no registrador v0
+		beq $t0,$zero,player2
+		srl $t0,$t0,16
+		
+		#teclas do player 1:
+		beq $t0, 0xF50A, key_p1		
+		beq $t0, 0xF20D, key_p1	
+		beq $t0, 0XF40B, key_p1		
+		beq $t0, 0XF30C, key_p1		
+				
+
+player2:	li $t3, 2		
+		sw $t3,0($t2)
+		
+		lw $t0,0($t1)
+		beq $t0,$zero,player3
+		srl $t0,$t0,16
+			
+		#teclas do player 2:
+		beq $t0, 0xBD42, key_p2		
+		beq $t0, 0xBB44, key_p2		
+		beq $t0, 0xBA45, key_p2		
+		beq $t0, 0xB946, key_p2		
+
+player3:	li $t3, 3		
+		sw $t3,0($t2)
+		
+		lw $t0,0($t1)
+		beq $t0,$zero,player4
+		srl $t0,$t0,16
+			
+		#teclas do player 3:
+		beq $t0, 0xEB14, key_p3
+		beq $t0, 0xE21D, key_p3
+		beq $t0, 0xF00F, key_p3
+		beq $t0, 0xE619, key_p3
+		
+
+player4:	li $t3, 4		
+		sw $t3,0($t2)
+		
+		lw $t0,0($t1)
+		beq $t0,$zero,keyboard_end
+		srl $t0,$t0,16
+		
+		#teclas do player 4:
+		beq $t0, 0xFD02, key_p4
+		beq $t0, 0xFB04, key_p4
+		beq $t0, 0xFA05, key_p4
+		beq $t0, 0xF906, key_p4
+		
+		jr $ra
+
+key_p1:		sw $t0, INPUT_1
+		jr $ra
+key_p2:		sw $t0, INPUT_2
+		jr $ra
+key_p3:		sw $t0, INPUT_3
+		jr $ra
+key_p4:		sw $t0, INPUT_4
 keyboard_end:	jr $ra
 
 #################################################################################################
 input:		beq $a0, 0xF50A, rotate		#verifica se a tecla de rotacao (w) foi pressionada
 		beq $a0, 0xF20D, left		#verifica se a tecla de esquerda (a) foi pressionada
-		beq $a0, 0XF30C, right		#verifica se a tecla de esquerda (d) foi pressionada
-		beq $a0, 0XF40B, down		#verifica se a tecla de esquerda (s) foi pressionada
+		beq $a0, 0xF40B, down		#verifica se a tecla de esquerda (d) foi pressionada
+		beq $a0, 0xF30C, right		#verifica se a tecla de esquerda (s) foi pressionada
+		
+		beq $a0, 0xBD42, rotate		#verifica se a tecla de rotacao (w) foi pressionada
+		beq $a0, 0xBB44, left		#verifica se a tecla de esquerda (a) foi pressionada
+		beq $a0, 0xBA45, down		#verifica se a tecla de esquerda (d) foi pressionada
+		beq $a0, 0xB946, right		#verifica se a tecla de esquerda (s) foi pressionada
+		
+		beq $a0, 0xEB14, rotate		#verifica se a tecla de rotacao (w) foi pressionada
+		beq $a0, 0xE21D, left		#verifica se a tecla de esquerda (a) foi pressionada
+		beq $a0, 0xF00F, down		#verifica se a tecla de esquerda (d) foi pressionada
+		beq $a0, 0xE619, right		#verifica se a tecla de esquerda (s) foi pressionada
+			
+		beq $a0, 0xFD02, rotate		#verifica se a tecla de rotacao (w) foi pressionada
+		beq $a0, 0xFB04, left		#verifica se a tecla de esquerda (a) foi pressionada
+		beq $a0, 0xFA05, down		#verifica se a tecla de esquerda (d) foi pressionada
+		beq $a0, 0xF906, right		#verifica se a tecla de esquerda (s) foi pressionada
+		
 		jr $ra
 		
 #-----------------------------------------------------------------------------------------------#
@@ -532,16 +792,22 @@ collision_check:addu $v0, $zero, $zero
 		
 		addu $t3, $zero, $zero		#inicializa contador da peca
 		
+		li $t4, 88			#tamanho de uma matriz de arena
+		mult $t4, $s3			#calcula o offset da matriz
+		mflo $t4			#coloca offset da matriz no registrador t4
+		
 		addi $t2, $a1, -2		#retira posicoes fantasma
 		sll $t2, $t2, 2			#calcula offset da linha da matriz do jogo
-		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		la $t1, LINE_1_0		#carrega o inicio da matriz do jogo
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+		add $t1, $t1, $t4		#coloca o endereco da posicao da matriz no registrador t1 com offset
 
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
 		mflo $t2			#move o resultado do offset para o registrador t2
 		
-		la $t8, LINE_19			#carrega o endereco da ultima linha da matriz
+		la $t8, LINE_1_19		#carrega o endereco da ultima linha da matriz
+		add $t8, $t8, $t4		#coloca o endereco da ultima posicao da matriz no registrador t8
 		
 loop_check:	bgeu $t3, 15, end_check		#se contador de colunas >= que 16, sai do loop
 		li $t4, 16			#carrega o imediato 16 no registrador t4
@@ -582,6 +848,7 @@ end_check:
 		jr $ra
 
 collided: 	addiu $v0, $zero, 1
+		
 		jr $ra
 
 #################################################################################################
@@ -604,12 +871,22 @@ collision: 	addi $sp, $sp, -4
 		ble $a1, 1, game_end		#se a peca esta acima do teto da arena, vai para game_end
 		addi $a1, $a1, -2		#retira posicoes fantasma
 		
+		li $t4, 88			#tamanho de uma matriz de arena
+		mult $t4, $s3			#calcula o offset da matrz
+		mflo $t4			#coloca o offset da matriz no registrador t4
+		
 		sll $t2, $a1, 2			#calcula offset da linha da matriz do jogo
-		la $t1, LINE_0			#carrega o inicio da matriz do jogo
+		la $t1, LINE_1_0			#carrega o inicio da matriz do jogo
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
+		add $t1, $t1, $t4		#coloca o endereco da posicao da matriz no registrador t1 com offset
 
-		la $t8, I_0			#carrega o endereco do inicio dos indexes da matriz
+		li $t4, 20			#tamanho de uma matriz de indexes
+		mult $t4, $s3			#calcula o offset da matrz
+		mflo $t4			#coloca o offset da matriz no registrador t4
+		
+		la $t8, I_1_0			#carrega o endereco do inicio dos indexes da matriz
 		add $t8, $t8, $a1		#coloca o endereco da posicao da matriz no registrador t8
+		add $t8, $t8, $t4		#coloca o endereco da posicao da matriz no registrador t8 com offset
 
 		li $t2, 3			#seta registrador t3 como 3
 		mult $a0, $t2			#calcula offset da coluna da matriz do jogo
@@ -652,11 +929,24 @@ loop_save_2:	j loop_save			#vai pra inicio do loop
 end_loop_save:	
 
 		addu $s2, $zero, $zero		#reseta peca movel
+				
+		li $t9, 20			#tamanho de uma matriz de indexes
+		mult $t9, $s3			#calcula o offset da matrz
+		mflo $t9			#coloca o offset da matriz no registrador t4
 		
-		la $t0, I_19			#carrega o endereco do ultimo index da matriz
-		la $t1, I_0			#carrega o endereco do primeiro index da matriz
-		la $t2, LINE_19			#carrega o endereco da ultima linha da matriz
-		la $t3, LINE_0			#carrega o endereco da primeira linha da matriz
+		la $t0, I_1_19			#carrega o endereco do ultimo index da matriz
+		addu $t0, $t0, $t9		#soma endereco ao offset
+		la $t1, I_1_0			#carrega o endereco do primeiro index da matriz
+		addu $t1, $t1, $t9		#soma endereco ao offset
+		
+		li $t9, 88			#tamanho de uma matriz de arena
+		mult $t9, $s3			#calcula o offset da matrz
+		mflo $t9			#coloca o offset da matriz no registrador t4
+		
+		la $t2, LINE_1_19		#carrega o endereco da ultima linha da matriz
+		addu $t2, $t2, $t9		#soma endereco ao offset
+		la $t3, LINE_1_0		#carrega o endereco da primeira linha da matriz
+		addu $t3, $t3, $t9		#soma endereco ao offset
 						
 loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda, sai do loop
 		lbu $t4, 0($t0)			#carrega o index
@@ -669,9 +959,12 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 		lw $ra, 0($sp)			#pega da pilha
 		addi $sp, $sp, 4
 		
-		lhu $t5, SCORE1
+		la $t8, SCORE1			#carrega o endereco do score na memoria
+		sll $t9, $s3, 1			#calcula o offset do score
+		addu $t8, $t8, $t9		#soma o endereco do score com o offset
+		lhu $t5, 0($t8)
 		addiu $t5, $t5, 100
-		sh $t5, SCORE1
+		sh $t5, 0($t8)
 		
 		addiu $t4, $t2, 0		#copia o endereco da linha da matriz
 		addiu $t5, $t0, 0		#copia o index da linha da matriz
@@ -717,7 +1010,10 @@ loop_l_1:	addi $t0, $t0, -1		#vai para o endereco do index anterior
 		addi $t2, $t2, -4		#vai para o endereco da linha anterior
 		j loop_l
 		
-collision_end:	lhu $a0, SCORE1
+collision_end:	la $t8, SCORE1			#carrega o endereco do score na memoria
+		sll $t9, $s3, 1			#calcula o offset do score
+		addu $t8, $t8, $t9		#soma o endereco do score com o offset
+		lhu $a0, 0($t8)			#carrega score
 		li $a1, 0
 		
 		addi $sp, $sp, -4
@@ -902,8 +1198,13 @@ plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sw $a1, 4($sp)
 		sw $a0, 0($sp)
 
+		li $t8, 88
+		mult $t8, $s3
+		mflo $t8
+
 		sll $t0, $a0, 2
-		la $t9, LINE_0
+		la $t9, LINE_1_0
+		addu $t9, $t9, $t8
 		add $t0, $t0, $t9	# endereco da linha a ser plotada
 		lw $t0, 0($t0)		# carrega a linha a ser plotada
 		
@@ -1089,6 +1390,8 @@ sai0:		li $a2, PAR_Y0			# pos_y = inicio_area_jogo_y + altura_area_jogo + lado_q
 		srl $t1, $t1, 16
 		addi $t1, $t1, SIDE
 		addi $t1, $t1, SIDE
+		
+		add $s3, $zero, $zero
 loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
 		la $a0, PTS			# carrega string 'Score'
 		move $a1, $t1			# plota string
@@ -1097,9 +1400,27 @@ loop_score:	bge $t1, $t0, sai_score		# se x >= limite_x, sai
 		syscall
 		andi $t3, $s7, 0x000000FF	# x = x + shift_x
 		add $t1, $t1, $t3
+		
+		addi $sp, $sp, -20
+		sw $ra, 16($sp)
+		sw $a0, 12($sp)
+		sw $a1, 8($sp)
+		sw $t0, 4($sp)
+		sw $t1, 0($sp)
+		add $a0, $zero, $zero
+		jal write_score			#plota o negativo da peca antiga (para apagar os vestigios dela)
+		lw $t1, 0($sp)
+		lw $t0, 4($sp)
+		lw $a1, 8($sp)
+		lw $a0, 12($sp)
+		lw $ra, 16($sp)
+		addi $sp, $sp, 20
+		
+		addiu $s3, $s3, 1
 		j loop_score
 		
-sai_score:	lw $a0, 0($sp)
+sai_score:	add $s3, $zero, $zero
+		lw $a0, 0($sp)
 		lw $a1, 4($sp)
 		lw $a2, 8($sp)
 		lw $a3, 12($sp)
@@ -1156,7 +1477,7 @@ passa_wscore:	lw $a0, 0($sp)
 #################################################################################################
 game_over:	andi $t0, $s7, 0x00FF0000
 		srl $t0, $t0, 16
-		andi $t1, $s0, 0x000000FF
+		andi $t1, $s7, 0x000000FF
 		mult $t1, $s3
 		mflo $t1
 		add $t0, $t0, $t1
