@@ -35,6 +35,12 @@ PIECE_2: .half 0x0
 PIECE_3: .half 0x0
 PIECE_4: .half 0x0
 
+# Inputs
+INPUT_1: .word 0x0
+INPUT_2: .word 0x0
+INPUT_3: .word 0x0
+INPUT_4: .word 0x0
+
 # Acumuladores de tempo
 TIME_1: .word 0x0
 TIME_2: .word 0x0
@@ -371,9 +377,14 @@ game_loop:	jal sys_time			#pega o tempo do sistema em ms
 		li $s0, 0			#acumula tempo suficiente pra ciclo
 
 continue_gl0:	jal keyboard      		#verifica teclado por uma tecla
-		beq $v0, 0, continue_gl1	#se nao teve input, continua o loop
+		la $t0, INPUT_1			#carrega o endereco do input
+		sll $t1, $s3, 2			#calcula o offset do input
+		addu $t0, $t0, $t1		#soma endereco do input com offset
+		lw $t1, 0($t0)			#pega input na memoria
+		sw $zero, 0($t0)		#reseta input
+		beq $t1, 0, continue_gl1	#se nao teve input, continua o loop
 		
-		add $a0, $v0, $zero		#seta o codigo da tecla pressionada como argumento
+		add $a0, $t1, $zero		#seta o codigo da tecla pressionada como argumento
 		jal input 			#senao, trata input
 		
 continue_gl1:	subu $t0, $s1, $s4		#calcula o tempo entre a ultima vez que a peca desceu e agora 
@@ -422,10 +433,53 @@ continue_gl5: j game_loop
 keyboard:	la $t1,0xFF100000
 		lw $t0,0($t1)
 		andi $t0,$t0,0x0001		# Le bit de Controle Teclado
-   		beq $t0,$zero, not_pressed   	# Se nao ha tecla pressionada, finaliza
-  		lw $v0,4($t1)  			# Tecla lida
-		j keyboard_end
-not_pressed:	add $v0, $zero, $zero		# se tecla nao pressionada, coloca zero no registrador v0
+   		beq $t0,$zero, keyboard_end   	# Se nao ha tecla pressionada, finaliza
+  		lw $t0,4($t1)  			# Tecla lida
+
+		#teclas do player 1:
+		beq $t0, 119, key_p1	
+		beq $t0, 87, key_p1		
+		beq $t0, 65, key_p1	
+		beq $t0, 97, key_p1	
+		beq $t0, 100, key_p1		
+		beq $t0, 68, key_p1	
+		beq $t0, 115, key_p1		
+		beq $t0, 83, key_p1	
+		
+		#teclas do player 2:
+		beq $t0, 121, key_p2		
+		beq $t0, 89, key_p2		
+		beq $t0, 103, key_p2		
+		beq $t0, 71, key_p2		
+		beq $t0, 106, key_p2		
+		beq $t0, 74, key_p2		
+		beq $t0, 104, key_p2		
+		beq $t0, 72, key_p2	
+		
+		#teclas do player 3:
+		beq $t0, 111, key_p3
+		beq $t0, 79, key_p3
+		beq $t0, 107, key_p3
+		beq $t0, 75, key_p3
+		beq $t0, 59, key_p3
+		beq $t0, 108, key_p3
+		beq $t0, 76, key_p3
+		
+		#teclas do player 4:
+		beq $t0, 56, key_p4
+		beq $t0, 52, key_p4
+		beq $t0, 54, key_p4
+		beq $t0, 53, key_p4
+		
+		jr $ra
+
+key_p1:		sw $t0, INPUT_1
+		jr $ra
+key_p2:		sw $t0, INPUT_2
+		jr $ra
+key_p3:		sw $t0, INPUT_3
+		jr $ra
+key_p4:		sw $t0, INPUT_4
 keyboard_end:	jr $ra
 
 #################################################################################################
@@ -437,6 +491,29 @@ input:		beq $a0, 119, rotate		#verifica se a tecla de rotacao (w) foi pressionad
 		beq $a0, 68, right		#verifica se a tecla de esqurda (D) foi pressionada
 		beq $a0, 115, down		#verifica se a tecla de esquerda (s) foi pressionada
 		beq $a0, 83, down		#verifica se a tecla de esqurda (S) foi pressionada
+		
+		beq $a0, 121, rotate		#verifica se a tecla de rotacao (y) foi pressionada
+		beq $a0, 89, rotate		#verifica se a tecla de rotacao (Y) foi pressionada
+		beq $a0, 103, left		#verifica se a tecla de esquerda (g) foi pressionada
+		beq $a0, 71, left		#verifica se a tecla de esqurda (G) foi pressionada
+		beq $a0, 106, right		#verifica se a tecla de esquerda (j) foi pressionada
+		beq $a0, 74, right		#verifica se a tecla de esqurda (J) foi pressionada
+		beq $a0, 104, down		#verifica se a tecla de esquerda (h) foi pressionada
+		beq $a0, 72, down		#verifica se a tecla de esqurda (H) foi pressionada
+		
+		beq $a0, 111, rotate		#verifica se a tecla de rotacao (o) foi pressionada
+		beq $a0, 79, rotate		#verifica se a tecla de rotacao (O) foi pressionada
+		beq $a0, 107, left		#verifica se a tecla de esquerda (k) foi pressionada
+		beq $a0, 75, left		#verifica se a tecla de esqurda (K) foi pressionada
+		beq $a0, 59, right		#verifica se a tecla de esquerda (;) foi pressionada
+		beq $a0, 108, down		#verifica se a tecla de esquerda (L) foi pressionada
+		beq $a0, 76, down		#verifica se a tecla de esqurda (L) foi pressionada
+			
+		beq $a0, 56, rotate		#verifica se a tecla de rotacao (8) foi pressionada
+		beq $a0, 52, left		#verifica se a tecla de esquerda (4) foi pressionada
+		beq $a0, 54, right		#verifica se a tecla de esquerda (6) foi pressionada
+		beq $a0, 53, down		#verifica se a tecla de esqurda (5) foi pressionada
+		
 		jr $ra
 		
 #-----------------------------------------------------------------------------------------------#
@@ -770,7 +847,7 @@ collision: 	addi $sp, $sp, -4
 		add $t1, $t1, $t2		#coloca o endereco da posicao da matriz no registrador t1
 		add $t1, $t1, $t4		#coloca o endereco da posicao da matriz no registrador t1 com offset
 
-		li $t4, 80			#tamanho de uma matriz de indexes
+		li $t4, 20			#tamanho de uma matriz de indexes
 		mult $t4, $s3			#calcula o offset da matrz
 		mflo $t4			#coloca o offset da matriz no registrador t4
 		
@@ -820,7 +897,7 @@ end_loop_save:
 
 		addu $s2, $zero, $zero		#reseta peca movel
 				
-		li $t9, 80			#tamanho de uma matriz de indexes
+		li $t9, 20			#tamanho de uma matriz de indexes
 		mult $t9, $s3			#calcula o offset da matrz
 		mflo $t9			#coloca o offset da matriz no registrador t4
 		
@@ -850,7 +927,7 @@ loop_l:		blt $t0, $t1, collision_end	#se ja percorreu os indices da matriz toda,
 		addi $sp, $sp, 4
 		
 		la $t8, SCORE1			#carrega o endereco do score na memoria
-		sll $t9, $s3, 2			#calcula o offset do score
+		sll $t9, $s3, 1			#calcula o offset do score
 		addu $t8, $t8, $t9		#soma o endereco do score com o offset
 		lhu $t5, 0($t8)
 		addiu $t5, $t5, 100
@@ -900,7 +977,10 @@ loop_l_1:	addi $t0, $t0, -1		#vai para o endereco do index anterior
 		addi $t2, $t2, -4		#vai para o endereco da linha anterior
 		j loop_l
 		
-collision_end:	lhu $a0, SCORE1
+collision_end:	la $t8, SCORE1			#carrega o endereco do score na memoria
+		sll $t9, $s3, 1			#calcula o offset do score
+		addu $t8, $t8, $t9		#soma o endereco do score com o offset
+		lhu $a0, 0($t8)			#carrega score
 		li $a1, 0
 		
 		addi $sp, $sp, -4
