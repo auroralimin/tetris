@@ -770,11 +770,11 @@ reset_rotate:	addiu $a3, $a3, 3		#nova rotacao com plot positivo
 
 #################################################################################################
 update_left:	addi $a0, $a0, -1		#decrementa a posicao x da peca e coloca no registrador a1
-		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		jr $ra
 		
 #################################################################################################
 after_left:	addiu $a0, $a0, 1		#incrementa a posicao x
+		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		addiu $t1, $a0, 1		#coloca posicao x anterior em t1
 		sll $t2, $t1, 9 		#coloca a posicao x antiga da peca nos bits certos da abstracao
 		subu $t2, $s2, $t2		#remove a posicao x antiga da peca
@@ -789,11 +789,11 @@ reset_left:	subi $a0, $a0, 1		#seta a nova posicao x da peca com offset
 
 #################################################################################################
 update_right:	addiu $a0, $a0, 1		#decrementa a posicao x da peca e coloca no registrador a1
-		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		jr $ra
 		
 #################################################################################################
 after_right:	addi $a0, $a0, -1		#incrementa a posicao x
+		addiu $a1, $a1, 1		#incrementa a posicao y da peca e coloca no registrador a1
 		addi $t1, $a0, -1		#coloca posicao x anterior em t1
 		sll $t2, $t1, 9 		#coloca a posicao x antiga da peca nos bits certos da abstracao
 		subu $t2, $s2, $t2		#remove a posicao x antiga da peca
@@ -1267,7 +1267,7 @@ sai_plot0:	lw $a0, 0($sp)
 		
 #################################################################################################
 ######### A rotina abaixo plota uma linha da matriz de jogo. Recebe como argumento a 
-######### linha que vai ser plotada e o player.
+######### linha que vai ser plotada
 #################################################################################################												
 plot_line:	addi $sp, $sp, -16	# Salva os argumentos na pilha
 		sw $a3, 12($sp)
